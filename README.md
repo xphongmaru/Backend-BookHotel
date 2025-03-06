@@ -1,5 +1,5 @@
 # BookHotel
-- Run
+# Run
 + create database name BookHotel
 + dotnet ef database update
 
