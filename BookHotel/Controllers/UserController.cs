@@ -17,6 +17,12 @@ namespace BookHotel.Controllers
         public readonly IControl _control;
         public readonly AppDbContext _context;
 
+        [HttpGet("ping")]
+        public IActionResult Ping()
+        {
+            return Ok("API is working!");
+        }
+        
         public UserController(IControl control, AppDbContext context)
         {
             _control = control;

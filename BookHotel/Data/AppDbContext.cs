@@ -133,6 +133,15 @@ namespace BookHotel.Data
                 .HasOne<Booking>(bd => bd.Booking)
                 .WithMany(d => d.Booking_Discounts)
                 .HasForeignKey(bd => bd.Booking_id);
+
+            modelBuilder.Entity<Booking_Room>()
+                .Property(b => b.Price)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Room>()
+                .Property(r => r.Price)
+                .HasPrecision(18, 2);
+
         }
 
         public override int SaveChanges()
