@@ -26,11 +26,10 @@ namespace BookHotel.Repositories.Admin
                 .Select(u => new UserGetItem
                 {
                     User_id = u.User_id,
-                    Username = u.Username,
                     Fullname = u.Fullname,
                     Email = u.Email,
                     Phone = u.Phone,
-                    Role_id = u.Role_id,
+                    Role_name = u.Role.Name
                 })
                 .FirstOrDefaultAsync();
         }
@@ -38,7 +37,6 @@ namespace BookHotel.Repositories.Admin
         {
             var user = new User
             {
-                Username = request.Username,
                 Password = request.Password,
                 Fullname = request.Fullname,
                 Email = request.Email,
@@ -52,7 +50,6 @@ namespace BookHotel.Repositories.Admin
         public async Task UpdateUser(User user, UserEditRequest request)
         {
             user.Fullname = request.Fullname;
-            user.Email = request.Email;
             user.Phone = request.Phone;
             user.Role_id = request.Role_id;
             _context.Entry(user).State= EntityState.Modified;

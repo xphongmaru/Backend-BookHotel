@@ -3,6 +3,8 @@ using BookHotel.Models;
 using BookHotel.Repositories.Admin;
 using BookHotel.DTOs;
 using BookHotel.Data;
+using Microsoft.EntityFrameworkCore;
+using Azure.Messaging;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -43,6 +45,12 @@ namespace BookHotel.Controllers
         {
             //if (!ModelState.IsValid) return BadRequest();
             var existingRole = await _context.Roles.FindAsync(request.Role_id);
+            var existingEmail = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (existingEmail != null)
+            {
+                return BadRequest(new { Message = "Email đã tồn tại." });
+            }
+
             if (existingRole == null) {
                 return BadRequest();
             }
