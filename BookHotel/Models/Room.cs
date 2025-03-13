@@ -18,7 +18,7 @@ namespace BookHotel.Models
         [ForeignKey("TypeRoom")]
         public int TypeRoom_id { get; set; }
         [JsonIgnore]
-        public TypeRoom TypeRoom { get; set; } = new();
+        public TypeRoom TypeRoom { get; set; }
 
         [JsonIgnore]
         public List<RoomPhoto> RoomPhotos { get; set; } = new();

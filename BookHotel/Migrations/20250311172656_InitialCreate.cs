@@ -148,16 +148,16 @@ namespace BookHotel.Migrations
                 columns: table => new
                 {
                     Role_id = table.Column<int>(type: "int", nullable: false),
-                    Permision_id = table.Column<int>(type: "int", nullable: false),
+                    Permission_id = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Role_Permissions", x => new { x.Role_id, x.Permision_id });
+                    table.PrimaryKey("PK_Role_Permissions", x => new { x.Role_id, x.Permission_id });
                     table.ForeignKey(
-                        name: "FK_Role_Permissions_Permissions_Permision_id",
-                        column: x => x.Permision_id,
+                        name: "FK_Role_Permissions_Permissions_Permission_id",
+                        column: x => x.Permission_id,
                         principalTable: "Permissions",
                         principalColumn: "Permission_id",
                         onDelete: ReferentialAction.Cascade);
@@ -382,9 +382,9 @@ namespace BookHotel.Migrations
                 column: "Room_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Role_Permissions_Permision_id",
+                name: "IX_Role_Permissions_Permission_id",
                 table: "Role_Permissions",
-                column: "Permision_id");
+                column: "Permission_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Room_Amenities_Amenities_id",

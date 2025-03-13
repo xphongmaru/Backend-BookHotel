@@ -14,7 +14,7 @@ namespace BookHotel.Models
         public int Room_id { get; set; }
 
         [JsonIgnore]
-        public Room Room { get; set; } = new();
+        public Room Room { get; set; }
     }
 
 }
