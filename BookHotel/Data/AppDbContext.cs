@@ -51,7 +51,7 @@ namespace BookHotel.Data
 
             //role-permission
             modelBuilder.Entity<Role_Permission>()
-                .HasKey(rp => new { rp.Role_id, rp.Permision_id });
+                .HasKey(rp => new { rp.Role_id, rp.Permission_id });
 
             modelBuilder.Entity<Role_Permission>()
                 .HasOne<Role>(rp => rp.Role)
@@ -61,7 +61,7 @@ namespace BookHotel.Data
             modelBuilder.Entity<Role_Permission>()
                 .HasOne<Permission>(rp => rp.Permission)
                 .WithMany(p => p.Role_Permissions)
-                .HasForeignKey(rp => rp.Permision_id);
+                .HasForeignKey(rp => rp.Permission_id);
 
             //typeRoom-room
             modelBuilder.Entity<Room>()

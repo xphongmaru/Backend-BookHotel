@@ -7,10 +7,10 @@ namespace BookHotel.Models
     {
         public int Role_id { get; set; }
         [JsonIgnore]
-        public Role Role { get; set; } = new();
-        public int Permision_id { get; set; }
+        public Role Role { get; set; }
+        public int Permission_id { get; set; }
         [JsonIgnore]
-        public Permission Permission { get; set; } = new();
+        public Permission Permission { get; set; }
     }
 
 }

@@ -6,11 +6,14 @@ namespace BookHotel.Repositories.Admin
     {
         private readonly AppDbContext _context;
         public IRoleRepository Roles { get; }
-
+        public IPermissionRepository Permissions { get; }
+        public IUserRepository User { get; }
         public Control(AppDbContext context)
         {
             _context = context;
             Roles = new RoleRepository(_context);
+            Permissions = new PermissionRepository(_context);
+            User = new UserRepository(_context);
         }
 
         public async Task Save()

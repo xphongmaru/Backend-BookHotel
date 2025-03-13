@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BookHotel.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250305153219_InitialCreate")]
+    [Migration("20250311172656_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -350,7 +350,7 @@ namespace BookHotel.Migrations
                     b.Property<int>("Role_id")
                         .HasColumnType("int");
 
-                    b.Property<int>("Permision_id")
+                    b.Property<int>("Permission_id")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
@@ -361,9 +361,9 @@ namespace BookHotel.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("Role_id", "Permision_id");
+                    b.HasKey("Role_id", "Permission_id");
 
-                    b.HasIndex("Permision_id");
+                    b.HasIndex("Permission_id");
 
                     b.ToTable("Role_Permissions");
                 });
@@ -616,7 +616,7 @@ namespace BookHotel.Migrations
                 {
                     b.HasOne("BookHotel.Models.Permission", "Permission")
                         .WithMany("Role_Permissions")
-                        .HasForeignKey("Permision_id")
+                        .HasForeignKey("Permission_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
