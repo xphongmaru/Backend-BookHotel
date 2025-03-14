@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BookHotel.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250313163544_InitialCreate")]
+    [Migration("20250314101631_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -143,6 +143,7 @@ namespace BookHotel.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("Quantity")
@@ -228,6 +229,9 @@ namespace BookHotel.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("EmailVerify")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("Gender")
                         .HasColumnType("bit");
@@ -390,6 +394,7 @@ namespace BookHotel.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Status")

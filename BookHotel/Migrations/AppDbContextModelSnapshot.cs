@@ -140,6 +140,7 @@ namespace BookHotel.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("Quantity")
@@ -225,6 +226,9 @@ namespace BookHotel.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("EmailVerify")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("Gender")
                         .HasColumnType("bit");
@@ -387,6 +391,7 @@ namespace BookHotel.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Status")

@@ -15,6 +15,7 @@ namespace BookHotel.Models
         public DateOnly Bod { get; set; }
         public bool Gender { get; set; }
         public string Password { get; set; } = string.Empty;
+        public bool EmailVerify { get; set; } = false;
 
         [JsonIgnore]
         public List<Booking> Bookings { get; set; } = new();
