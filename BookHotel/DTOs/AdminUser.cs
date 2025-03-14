@@ -32,9 +32,10 @@ namespace BookHotel.DTOs
 
     public class UserCreateRequest
     {
-        [Required(ErrorMessage = "Tên đăng nhập không được để trống.")]
-        [MaxLength(100, ErrorMessage = "Tên đăng nhập không dài hơn 100.")]
-        public string Username { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Email role không được để trống.")]
+        [MaxLength(100, ErrorMessage = "Email không dài hơn 100 ký tự.")]
+        [EmailAddress(ErrorMessage = "Email không đúng định dạng.")]
+        public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Mật khẩu không được để trống.")]
         [MaxLength(20, ErrorMessage = "Mật khẩu không dài hơn 20 ký tự.")]
@@ -43,10 +44,6 @@ namespace BookHotel.DTOs
         [Required(ErrorMessage = "Tên user không được để trống.")]
         [MaxLength(100, ErrorMessage = "Tên user không dài hơn 100 ký tự.")]
         public string Fullname { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "Email role không được để trống.")]
-        [MaxLength(100, ErrorMessage = "Email không dài hơn 100 ký tự.")]
-        public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
         public int Role_id { get; set; }
     }
@@ -57,9 +54,6 @@ namespace BookHotel.DTOs
         [MaxLength(100, ErrorMessage = "Tên user không dài hơn 100 ký tự.")]
         public string Fullname { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Email role không được để trống.")]
-        [MaxLength(100, ErrorMessage = "Email không dài hơn 100 ký tự.")]
-        public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
         public int Role_id { get; set; }
     }
@@ -67,10 +61,18 @@ namespace BookHotel.DTOs
     public class UserGetItem
     {
         public int User_id { get; set; }
-        public string Username { get; set; } = string.Empty;
         public string Fullname { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
-        public int Role_id { get; set; }
+        public string Role_name { get; set; } = string.Empty;
     } 
+
+    public class AdminLoginRequest
+    {
+        [Required(ErrorMessage = "Tên đăng nhập không được để trống.")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Mật khẩu không được để trống.")]
+        public string Password { get; set; } = string.Empty;
+    }
 }

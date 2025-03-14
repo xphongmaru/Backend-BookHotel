@@ -14,7 +14,6 @@ namespace BookHotel.Models
         public string CCCD { get; set; } = string.Empty;
         public DateOnly Bod { get; set; }
         public bool Gender { get; set; }
-        public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
 
         [JsonIgnore]
