@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using BookHotel.Data;
 using BookHotel.Repositories.Admin;
+using BookHotel.Services.Mail;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +28,9 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers();
 
+//mail
+builder.Services.AddTransient<IEmailService, EmailService>();
+
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -49,6 +53,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Cho phép ứng dụng lắng nghe trên cổng 5000
-app.Urls.Add("http://*:5000");
+app.Urls.Add("https://*:7242");
 
 app.Run();
