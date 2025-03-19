@@ -62,43 +62,15 @@ namespace BookHotel.Migrations
                     Bod = table.Column<DateOnly>(type: "date", nullable: false),
                     Gender = table.Column<bool>(type: "bit", nullable: false),
                     Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Role = table.Column<int>(type: "int", nullable: false),
                     EmailVerify = table.Column<bool>(type: "bit", nullable: false),
+                    OTP = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Guess", x => x.Guess_id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Permissions",
-                columns: table => new
-                {
-                    Permission_id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Permissions", x => x.Permission_id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Roles",
-                columns: table => new
-                {
-                    Role_id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Roles", x => x.Role_id);
                 });
 
             migrationBuilder.CreateTable(
@@ -140,57 +112,6 @@ namespace BookHotel.Migrations
                         column: x => x.Guess_id,
                         principalTable: "Guess",
                         principalColumn: "Guess_id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Role_Permissions",
-                columns: table => new
-                {
-                    Role_id = table.Column<int>(type: "int", nullable: false),
-                    Permission_id = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Role_Permissions", x => new { x.Role_id, x.Permission_id });
-                    table.ForeignKey(
-                        name: "FK_Role_Permissions_Permissions_Permission_id",
-                        column: x => x.Permission_id,
-                        principalTable: "Permissions",
-                        principalColumn: "Permission_id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Role_Permissions_Roles_Role_id",
-                        column: x => x.Role_id,
-                        principalTable: "Roles",
-                        principalColumn: "Role_id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Users",
-                columns: table => new
-                {
-                    User_id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Password = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    Fullname = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Role_id = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Users", x => x.User_id);
-                    table.ForeignKey(
-                        name: "FK_Users_Roles_Role_id",
-                        column: x => x.Role_id,
-                        principalTable: "Roles",
-                        principalColumn: "Role_id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -381,11 +302,6 @@ namespace BookHotel.Migrations
                 column: "Room_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Role_Permissions_Permission_id",
-                table: "Role_Permissions",
-                column: "Permission_id");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Room_Amenities_Amenities_id",
                 table: "Room_Amenities",
                 column: "Amenities_id");
@@ -399,11 +315,6 @@ namespace BookHotel.Migrations
                 name: "IX_Rooms_TypeRoom_id",
                 table: "Rooms",
                 column: "TypeRoom_id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_Role_id",
-                table: "Users",
-                column: "Role_id");
         }
 
         /// <inheritdoc />
@@ -419,16 +330,10 @@ namespace BookHotel.Migrations
                 name: "Reviews");
 
             migrationBuilder.DropTable(
-                name: "Role_Permissions");
-
-            migrationBuilder.DropTable(
                 name: "Room_Amenities");
 
             migrationBuilder.DropTable(
                 name: "RoomPhotos");
-
-            migrationBuilder.DropTable(
-                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "Discounts");
@@ -437,16 +342,10 @@ namespace BookHotel.Migrations
                 name: "Bookings");
 
             migrationBuilder.DropTable(
-                name: "Permissions");
-
-            migrationBuilder.DropTable(
                 name: "Amenities");
 
             migrationBuilder.DropTable(
                 name: "Rooms");
-
-            migrationBuilder.DropTable(
-                name: "Roles");
 
             migrationBuilder.DropTable(
                 name: "Guess");

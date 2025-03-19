@@ -237,6 +237,9 @@ namespace BookHotel.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("OTP")
+                        .HasColumnType("int");
+
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -245,38 +248,15 @@ namespace BookHotel.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Guess_id");
 
                     b.ToTable("Guess");
-                });
-
-            modelBuilder.Entity("BookHotel.Models.Permission", b =>
-                {
-                    b.Property<int>("Permission_id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Permission_id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Permission_id");
-
-                    b.ToTable("Permissions");
                 });
 
             modelBuilder.Entity("BookHotel.Models.Review", b =>
@@ -315,55 +295,6 @@ namespace BookHotel.Migrations
                     b.HasIndex("Room_id");
 
                     b.ToTable("Reviews");
-                });
-
-            modelBuilder.Entity("BookHotel.Models.Role", b =>
-                {
-                    b.Property<int>("Role_id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Role_id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Role_id");
-
-                    b.ToTable("Roles");
-                });
-
-            modelBuilder.Entity("BookHotel.Models.Role_Permission", b =>
-                {
-                    b.Property<int>("Role_id")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Permission_id")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Role_id", "Permission_id");
-
-                    b.HasIndex("Permission_id");
-
-                    b.ToTable("Role_Permissions");
                 });
 
             modelBuilder.Entity("BookHotel.Models.Room", b =>
@@ -497,51 +428,6 @@ namespace BookHotel.Migrations
                     b.ToTable("TypeRooms");
                 });
 
-            modelBuilder.Entity("BookHotel.Models.User", b =>
-                {
-                    b.Property<int>("User_id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("User_id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Fullname")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Role_id")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("User_id");
-
-                    b.HasIndex("Role_id");
-
-                    b.ToTable("Users");
-                });
-
             modelBuilder.Entity("BookHotel.Models.Booking", b =>
                 {
                     b.HasOne("BookHotel.Models.Guess", "Guess")
@@ -610,25 +496,6 @@ namespace BookHotel.Migrations
                     b.Navigation("Room");
                 });
 
-            modelBuilder.Entity("BookHotel.Models.Role_Permission", b =>
-                {
-                    b.HasOne("BookHotel.Models.Permission", "Permission")
-                        .WithMany("Role_Permissions")
-                        .HasForeignKey("Permission_id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BookHotel.Models.Role", "Role")
-                        .WithMany("Role_Permissions")
-                        .HasForeignKey("Role_id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Permission");
-
-                    b.Navigation("Role");
-                });
-
             modelBuilder.Entity("BookHotel.Models.Room", b =>
                 {
                     b.HasOne("BookHotel.Models.TypeRoom", "TypeRoom")
@@ -670,17 +537,6 @@ namespace BookHotel.Migrations
                     b.Navigation("Room");
                 });
 
-            modelBuilder.Entity("BookHotel.Models.User", b =>
-                {
-                    b.HasOne("BookHotel.Models.Role", "Role")
-                        .WithMany("Users")
-                        .HasForeignKey("Role_id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Role");
-                });
-
             modelBuilder.Entity("BookHotel.Models.Amenities", b =>
                 {
                     b.Navigation("Room_Amenities");
@@ -703,18 +559,6 @@ namespace BookHotel.Migrations
                     b.Navigation("Bookings");
 
                     b.Navigation("Reviews");
-                });
-
-            modelBuilder.Entity("BookHotel.Models.Permission", b =>
-                {
-                    b.Navigation("Role_Permissions");
-                });
-
-            modelBuilder.Entity("BookHotel.Models.Role", b =>
-                {
-                    b.Navigation("Role_Permissions");
-
-                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("BookHotel.Models.Room", b =>
