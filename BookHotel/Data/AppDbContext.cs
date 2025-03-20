@@ -9,10 +9,6 @@ namespace BookHotel.Data
         {
         }
 
-        public DbSet<Role> Roles { get; set; }
-        public DbSet<User> Users { get; set; }
-        public DbSet<Permission> Permissions { get; set; }
-        public DbSet<Role_Permission> Role_Permissions { get; set; }
         public DbSet<TypeRoom> TypeRooms { get; set; }
         public DbSet<Room> Rooms { get; set; }
         public DbSet<RoomPhoto> RoomPhotos { get; set; }
@@ -43,25 +39,6 @@ namespace BookHotel.Data
                         .Property("CreatedAt")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
                 });
-            //role-user
-            modelBuilder.Entity<User>()
-                .HasOne<Role>(user => user.Role)
-                .WithMany(role => role.Users)
-                .HasForeignKey(user =>user.Role_id);
-
-            //role-permission
-            modelBuilder.Entity<Role_Permission>()
-                .HasKey(rp => new { rp.Role_id, rp.Permission_id });
-
-            modelBuilder.Entity<Role_Permission>()
-                .HasOne<Role>(rp => rp.Role)
-                .WithMany(r => r.Role_Permissions)
-                .HasForeignKey(rp => rp.Role_id);
-
-            modelBuilder.Entity<Role_Permission>()
-                .HasOne<Permission>(rp => rp.Permission)
-                .WithMany(p => p.Role_Permissions)
-                .HasForeignKey(rp => rp.Permission_id);
 
             //typeRoom-room
             modelBuilder.Entity<Room>()

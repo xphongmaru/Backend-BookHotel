@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using BookHotel.Data;
-using BookHotel.Repositories.Admin;
+//using BookHotel.Repositories.Admin;
 using BookHotel.Services.Mail;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,8 +11,8 @@ builder.Services.AddDbContext<AppDbContext>(
 );
 
 // Repositories
-builder.Services.AddScoped<IControl, Control>();
-builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+//builder.Services.AddScoped<IControl, Control>();
+//builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
 // Cấu hình CORS
 builder.Services.AddCors(options =>
