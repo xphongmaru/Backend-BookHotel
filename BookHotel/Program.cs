@@ -54,6 +54,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Cho phép ứng dụng lắng nghe trên cổng 5000
-app.Urls.Add("https://*:7242");
+// app.Urls.Add("https://*:7242");
+app.Urls.Add("http://*:5000");
+
 
 app.Run();

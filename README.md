@@ -27,3 +27,8 @@ docker run --rm \ --network="host" \ bookhotel-api \ dotnet ef database update
 # DELETE
 + docker rm bookhotel-api sqlserver-container
 
+# HOld info your db
++ git stash
++ git pull --force
++ git stash pop  # Lấy lại các thay đổi đã stash
+
