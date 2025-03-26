@@ -11,8 +11,9 @@ builder.Services.AddDbContext<AppDbContext>(
 );
 
 // Repositories
-//builder.Services.AddScoped<IControl, Control>();
-//builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IControl, Control>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IRoomRepository, RoomRepository>();
 
 // Cấu hình CORS
 builder.Services.AddCors(options =>
