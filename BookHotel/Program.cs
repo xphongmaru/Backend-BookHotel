@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using BookHotel.Data;
-using BookHotel.Repositories.Admin;
+//using BookHotel.Repositories.Admin;
 using BookHotel.Services.Mail;
 
 var builder = WebApplication.CreateBuilder(args);

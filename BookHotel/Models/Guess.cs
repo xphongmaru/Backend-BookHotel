@@ -12,10 +12,12 @@ namespace BookHotel.Models
         public string Email { get; set; } = string.Empty;
         public string Address { get; set; } = string.Empty;
         public string CCCD { get; set; } = string.Empty;
-        public DateOnly Bod { get; set; }
+        public DateTime Bod { get; set; }
         public bool Gender { get; set; }
         public string Password { get; set; } = string.Empty;
+        public int Role { get; set; } = 1;
         public bool EmailVerify { get; set; } = false;
+        public int OTP { get; set; }
 
         [JsonIgnore]
         public List<Booking> Bookings { get; set; } = new();

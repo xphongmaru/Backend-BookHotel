@@ -8,6 +8,8 @@ namespace BookHotel.Services.Mail
     public interface IEmailService
     {
         Task SendEmailAsync(string toEmail, string subject, string message);
+        Task SendEmailForgotPassword(string toEmail, string subject, string message);
+
     }
 
     public class EmailService: IEmailService
@@ -35,13 +37,42 @@ namespace BookHotel.Services.Mail
                 Subject = subject,
                 IsBodyHtml = true,
                 Body = $@"
-                    <p>Xin chào,</p>
-                    <p>Cảm ơn bạn đã đăng ký! Để có thể tạo tài khoản lưu trữ đầu tiên, vui lòng nhấp vào nút bên dưới để xác minh địa chỉ email của bạn.</p>
-                    <a href='{message}' style='padding: 10px 20px; color: white; background-color: blue; text-decoration: none;'>Xác minh email</a>
-                    <p>Nếu bạn không đăng ký, bạn không cần thực hiện thêm hành động nào nữa, địa chỉ email của bạn sẽ tự động bị xóa sau vài ngày.</p>
-                    <p>Nếu bạn gặp vấn đề khi nhấp vào nút, vui lòng sao chép và dán URL sau vào trình duyệt của bạn: {message  }</p>
-                    <p>Xin cảm ơn,</p>
-                    <p>BookHotel Team</p>
+                    <p style='font-size: 24px'>Xin chào,</p>
+                    <p style='font-size: 18px'>Cảm ơn bạn đã đăng ký! Để có thể tạo tài khoản lưu trữ đầu tiên, vui lòng xác minh địa chỉ email của bạn.</p>
+                    <p style='font-size: 20px'>Mã OTP: {message}</p>
+                    <p style='font-size: 18px'>Nếu bạn không đăng ký, bạn không cần thực hiện thêm hành động nào nữa, địa chỉ email của bạn sẽ tự động bị xóa sau vài ngày.</p>
+                    <p style='font-size: 18px'>Xin cảm ơn,</p>
+                    <p style='font-size: 18px'>BookHotel Team</p>
+                "
+            };
+
+            mailMessage.To.Add(toEmail);
+
+            await smtpClient.SendMailAsync(mailMessage);
+        }
+
+        public async Task SendEmailForgotPassword(string toEmail, string subject, string message)
+        {
+            var smtpConfig = _configuration.GetSection("Smtp");
+            var smtpClient = new SmtpClient(smtpConfig["Host"])
+            {
+                Port = int.Parse(smtpConfig["Port"]),
+                Credentials = new NetworkCredential(smtpConfig["UserName"], smtpConfig["Password"]),
+                EnableSsl = bool.Parse(smtpConfig["EnableSsl"]),
+            };
+
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress(smtpConfig["UserName"]),
+                Subject = subject,
+                IsBodyHtml = true,
+                Body = $@"
+                    <p style='font-size: 24px'>Xin chào,</p>
+                    <p style='font-size: 18px'>Bạn đã yêu cầu quên mật khẩu, vui lòng xác minh để lấy lại mật khẩu của bạn.</p>
+                    <p style='font-size: 20px'>Mã OTP: {message}</p>
+                    <p style='font-size: 18px'>Nếu bạn thực hiện yêu cầu quên mật khẩu, bạn không cần thực hiện thêm hành động nào nữa, địa chỉ email của bạn sẽ tự động bị xóa sau vài ngày.</p>
+                    <p style='font-size: 18px'>Xin cảm ơn,</p>
+                    <p style='font-size: 18px'>BookHotel Team</p>
                 "
             };
 
