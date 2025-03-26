@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace BookHotel.Models
 {
-    public class Room:BaseEntity
+    public class Room : BaseEntity
     {
         [Key]
         public int Room_id { get; set; }
@@ -33,4 +33,3 @@ namespace BookHotel.Models
         public List<Review> Reviews { get; set; } = new();
     }
 }
-
