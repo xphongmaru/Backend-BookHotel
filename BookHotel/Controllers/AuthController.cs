@@ -11,6 +11,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
+
 namespace BookHotel.Controllers
 {
     [Route("api/[controller]")]
@@ -33,11 +34,12 @@ namespace BookHotel.Controllers
         {
             var guess = _context.Guess.FirstOrDefault(g => g.Email == request.Email && g.Password == request.Password);
             if (guess == null)
-                return BadRequest("Email hoặc mật khẩu không đúng.");
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Email hoặc mật khẩu không đúng.", 400)));
 
             var emailVerify = _context.Guess.FirstOrDefault(g => g.Email == request.Email && g.EmailVerify == true);
             if (emailVerify == null)
-                return BadRequest("Email chưa được xác thực.");
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Email chưa được xác thực.", 400)));
+
             var role ="";
             if (guess.Role == 0) role = "admin";
             else role = "user";
@@ -55,12 +57,11 @@ namespace BookHotel.Controllers
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(30),
+                expires: DateTime.UtcNow.AddMinutes(30),
                 signingCredentials: new SigningCredentials(authSigninKey, SecurityAlgorithms.HmacSha256)
             );
 
-
-            return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
+            return Ok(new ApiResponse(true, new { token = new JwtSecurityTokenHandler().WriteToken(token) }, null));
         }
 
         [HttpPost("register")]
@@ -70,7 +71,7 @@ namespace BookHotel.Controllers
             var emailVerify = _context.Guess.FirstOrDefault(g => g.Email == request.Email);
             if (emailVerify != null)
             {
-                return BadRequest("Email đã tồn tại.");
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Email đã tồn tại.", 400)));
             }
 
             var guess = new Guess
@@ -90,40 +91,42 @@ namespace BookHotel.Controllers
             // Gửi email xác thực
             await _emailService.SendEmailAsync(guess.Email, "Xác thực tài khoản", $"{_OTP}");
 
-            return Ok("Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.");
-
-
+            return Ok(new ApiResponse(true, "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.", null));
         }
 
         [HttpPost("verify-email")]
         public async Task<ActionResult> VerifyEmail([FromBody] GuessVeryfyRequest request)
         {
             var guess = _context.Guess.FirstOrDefault(g => g.Email == request.Email && g.OTP == request.OTP);
+
             if (guess == null)
-                return BadRequest("OTP không đúng.");
-            if(guess.EmailVerify == true)
-                return BadRequest("Email đã được xác thực.");
-            if(guess != null)
             {
-                guess.EmailVerify = true;
-                guess.OTP = 0;
-                await _context.SaveChangesAsync();
-                return Ok(1);
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("OTP không đúng.", 400)));
             }
-            else
+
+            if (guess.EmailVerify)
             {
-                return BadRequest();
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Email đã được xác thực.", 400)));
             }
+
+            // Xác thực email thành công
+            guess.EmailVerify = true;
+            guess.OTP = 0;
+            await _context.SaveChangesAsync();
+
+            return Ok(new ApiResponse(true, "Xác thực email thành công.", null));
         }
+
 
         [HttpGet("forgot-password")]
         public async Task<ActionResult> ForgotPassword(string email)
         {
             var guess = _context.Guess.FirstOrDefault(g => g.Email == email);
             if (guess == null)
-                return BadRequest("Email không tồn tại.");
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Email không tồn tại.", 400)));
+
             if (guess.EmailVerify == false)
-                return BadRequest("Tài khoản chưa xác thực.");
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Tài khoản chưa xác thực.", 400)));
 
             var _OTP = new Random().Next(100000, 999999);
             guess.OTP = _OTP;
@@ -132,7 +135,7 @@ namespace BookHotel.Controllers
             // Gửi email xác thực
             await _emailService.SendEmailForgotPassword(guess.Email, "Quên mật khẩu", $"{_OTP}");
 
-            return Ok("Vui lòng kiểm tra email để lấy lại mật khẩu.");
+            return Ok(new ApiResponse(true, "Vui lòng kiểm tra email để lấy lại mật khẩu.", null));
         }
 
         [HttpPost("check-otp")]
@@ -140,12 +143,15 @@ namespace BookHotel.Controllers
         {
             var guess = _context.Guess.FirstOrDefault(g => g.Email == request.Email && g.OTP == request.OTP);
             if (guess == null)
-                return BadRequest("OTP không đúng.");
+            //return BadRequest("OTP không đúng.");
+            {
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("OTP không đúng.",400)));
+            }    
             else
             {
                 guess.OTP = 1;
                 await _context.SaveChangesAsync();
-                return Ok(1);
+                return Ok(new ApiResponse(true, 1, null));
             }
         }
 
@@ -154,16 +160,16 @@ namespace BookHotel.Controllers
         {
             var guess = _context.Guess.FirstOrDefault(g => g.Email == request.Email && g.OTP == 1);
             if (guess == null)
-                return BadRequest(0);
+            {
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Thay đổi mật khẩu mới không thành công.", 400)));
+            }    
             else
             {
                 guess.Password = request.NewPassword;
                 guess.OTP = 0;
                 await _context.SaveChangesAsync();
-                return Ok("Thay đổi mật khẩu mới thành công.");
+                return Ok(new ApiResponse(true, "Thay đổi mật khẩu mới thành công.", null));
             }
-
-
             
         }
     }
