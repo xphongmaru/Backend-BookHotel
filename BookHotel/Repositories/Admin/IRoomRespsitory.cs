@@ -11,6 +11,17 @@ namespace BookHotel.Repositories.Admin
         Task<(List<Room>, int)> GetRoomsAsync(int pageNumber, int pageSize);
 
         // Phương thức lấy danh sách phòng bán chạy
-        Task<List<Room>> GetBestSellingRoomsAsync(int topN);
+        Task<List<Room>> GetBestSellingRoomsAsync();
+
+        //Phương thức phân loại phòng dựa theo Typeroom_id
+        Task<List<Room>> FilterRoomsAsync(
+            string? name,
+            int? maxOccupancy,
+            int? typeRoomId,
+            decimal? minPrice,
+            decimal? maxPrice,
+            string? status,
+            double? minRating);
+
     }
 }

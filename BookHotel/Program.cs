@@ -26,7 +26,12 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddControllers();
+// Cấu hình Controllers với JSON hỗ trợ tiếng Việt (không bị lỗi font)
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+    });
 
 //mail
 builder.Services.AddTransient<IEmailService, EmailService>();
@@ -53,8 +58,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Cho phép ứng dụng lắng nghe trên cổng 5000
-// app.Urls.Add("https://*:7242");
-app.Urls.Add("http://*:5000");
+ app.Urls.Add("https://*:7242");
+//app.Urls.Add("http://*:5000");
 
 
 app.Run();

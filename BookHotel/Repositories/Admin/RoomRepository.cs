@@ -43,21 +43,63 @@ namespace BookHotel.Repositories.Admin
             return (rooms, totalRooms);
         }
 
+        //---------
         //Lấy danh sách phòng bán chạy
-        public async Task<List<Room>> GetBestSellingRoomsAsync(int topN)
+        public async Task<List<Room>> GetBestSellingRoomsAsync()
         {
-            var bestSellingRooms = await _context.Rooms
+            return await _context.Rooms
+                .Include(r => r.Reviews)
+                .Include(r => r.Booking_Rooms)
+                .Include(r => r.RoomPhotos)
+                .Include(r => r.TypeRoom)
+                .ToListAsync(); // Chỉ lấy dữ liệu, sắp xếp xử lý bên ngoài
+        }
+
+        //Phân loại phòng giựa trên kiểu phòng
+        public async Task<List<Room>> FilterRoomsAsync(
+    string? name,
+    int? maxOccupancy,
+    int? typeRoomId,
+    decimal? minPrice,
+    decimal? maxPrice,
+    string? status,
+    double? minRating
+)
+        {
+            var query = _context.Rooms
+                .Include(r => r.TypeRoom)
+                .Include(r => r.RoomPhotos)
                 .Include(r => r.Booking_Rooms)
                 .Include(r => r.Reviews)
-                .Include(r => r.RoomPhotos)
-                .OrderByDescending(r => r.Booking_Rooms.Count)  // Ưu tiên số lần đặt phòng
-                //.ThenByDescending(r => r.Booking_Rooms.Sum(b => b.TotalPrice)) // Ưu tiên doanh thu cao
-                .ThenByDescending(r => r.Reviews.Average(rev => rev.Rating)) // Ưu tiên đánh giá cao
-                .Take(topN)
-                .ToListAsync();
+                .AsQueryable();
 
-            return bestSellingRooms;
+            if (!string.IsNullOrWhiteSpace(name))
+                query = query.Where(r => r.Name.Contains(name));
+
+            if (maxOccupancy.HasValue)
+                query = query.Where(r => r.Max_occupancy >= maxOccupancy);
+
+            if (typeRoomId.HasValue)
+                query = query.Where(r => r.TypeRoom_id == typeRoomId);
+
+            if (minPrice.HasValue)
+                query = query.Where(r => r.Price >= minPrice);
+
+            if (maxPrice.HasValue)
+                query = query.Where(r => r.Price <= maxPrice);
+
+            if (!string.IsNullOrWhiteSpace(status))
+                query = query.Where(r => r.Status.ToLower() == status.ToLower());
+
+            if (minRating.HasValue)
+                query = query.Where(r => r.Reviews.Any() && r.Reviews.Average(rev => rev.Rating) >= minRating);
+
+            return await query.ToListAsync();
         }
+
+
+
+
     }
 
 }

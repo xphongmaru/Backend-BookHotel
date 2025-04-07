@@ -31,5 +31,7 @@ namespace BookHotel.Models
 
         [JsonIgnore]
         public List<Review> Reviews { get; set; } = new();
+
+        public virtual ICollection<Booking> Bookings { get; set; }  
     }
 }
