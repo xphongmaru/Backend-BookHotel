@@ -13,6 +13,8 @@ builder.Services.AddDbContext<AppDbContext>(
 
 // Repositories
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<IBookingRepository,BookingRepository>();
+builder.Services.AddScoped<IBookingRoomRepository,BookingRoomRepository>();
 
 // Cấu hình CORS
 builder.Services.AddCors(options =>
@@ -54,7 +56,7 @@ app.MapControllers();
 
 // Cho phép ứng dụng lắng nghe trên cổng 5000
 // app.Urls.Add("https://*:7242");
-app.Urls.Add("http://*:5000");
+app.Urls.Add("https://*:7242");
 
 
 app.Run();
