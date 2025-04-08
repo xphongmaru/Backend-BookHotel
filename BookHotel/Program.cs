@@ -13,6 +13,8 @@ builder.Services.AddDbContext<AppDbContext>(
 
 // Repositories
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<IBookingRepository,BookingRepository>();
+builder.Services.AddScoped<IBookingRoomRepository,BookingRoomRepository>();
 
 // Cấu hình CORS
 builder.Services.AddCors(options =>

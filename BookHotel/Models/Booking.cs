@@ -19,7 +19,7 @@ namespace BookHotel.Models
         public int Guess_id { get; set; }
 
         [JsonIgnore]
-        public Guess Guess { get; set; } = new();
+        public Guess Guess { get; set; }
 
         [JsonIgnore]
         public List<Booking_Room> Booking_Rooms { get; set; } = new();
