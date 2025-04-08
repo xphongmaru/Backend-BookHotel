@@ -45,9 +45,6 @@ namespace BookHotel.Controllers
             return  Ok(newDiscount);
         }
         
-        [HttpPut]
-        public Task<ActionResult>
-        
     }
 
    
