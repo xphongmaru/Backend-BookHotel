@@ -44,7 +44,8 @@ namespace BookHotel.Controllers
             var user = await _context.Guess.FindAsync(id);
             if (user == null)
             {
-                return NotFound();
+                return NotFound(new ApiResponse(false, null, new ErrorResponse("Không tìm thấy người dùng", 400)));
+
             }
             return new GetUserRequest
             {
@@ -68,7 +69,7 @@ namespace BookHotel.Controllers
             var emailVerify = _context.Guess.FirstOrDefault(g => g.Email == request.Email);
             if (emailVerify != null)
             {
-                return BadRequest("Email đã tồn tại.");
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Email đã tồn tại.", 400)));
             }
 
             var guess = new Guess
@@ -88,7 +89,7 @@ namespace BookHotel.Controllers
             // Gửi email xác thực
             await _emailService.SendEmailAsync(guess.Email, "Xác thực tài khoản", $"{_OTP}");
 
-            return Ok("Tạo tài khoản thành công.");
+            return Ok(new ApiResponse(true, "Tạo tài khoản thành công. Vui lòng kiểm tra email để xác thực tài khoản.", null));
 
         }
 
@@ -99,7 +100,7 @@ namespace BookHotel.Controllers
             var user = await _context.Guess.FindAsync(id);
             if (user == null)
             {
-                return NotFound();
+                return NotFound(new ApiResponse(false, null, new ErrorResponse("Email đã tồn tại.", 400)));
             }
             user.Name = request.Name;
             user.PhoneNumber = request.PhoneNumber;
@@ -111,7 +112,7 @@ namespace BookHotel.Controllers
             
             _context.Entry(user).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            return Ok("Cập nhật thông tin thành công.");
+            return Ok(new ApiResponse(true, "Cập nhật thông tin thành công.", null));
         }
     }
 }
