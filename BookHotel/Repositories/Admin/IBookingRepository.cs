@@ -7,6 +7,6 @@ namespace BookHotel.Repositories.Admin
     {
         //lay toan bo danh sach booking
        Task<IEnumerable<Booking>> GetBooking();
-      
+        public decimal getTotal(int id);
     }
 }

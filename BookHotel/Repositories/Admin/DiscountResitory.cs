@@ -16,6 +16,16 @@ namespace BookHotel.Repositories.Admin
             
         }
 
+        public bool DiscountExist(string code)
+        {
+            var discount=_context.Discounts.FirstOrDefault(d => d.Code == code);
+            
+            if (discount == null) {
+                return false;
+            }
+
+            return true;
+        }
         
     }
 }
