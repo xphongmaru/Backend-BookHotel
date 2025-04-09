@@ -18,6 +18,15 @@ namespace BookHotel.DTOs
         public bool Status { get; set; }
     }
 
- 
+    public class DiscountWithIdDto 
+    {
+        public int Discount_id { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public float Discount_percentage { get; set; }
+        public float Price_applies { get; set; }
+        public float Max_discount { get; set; }
+        public DateTime Start_date { get; set; }
+        public DateTime End_date { get; set; }
+    }
     
 }

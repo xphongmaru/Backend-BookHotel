@@ -22,5 +22,20 @@ namespace BookHotel.Repositories.Admin
             var bookingList=await _context.Bookings.ToListAsync();
             return bookingList;
         }
+
+        public decimal getTotal(int id)
+        {
+            decimal total = 0;
+
+            var booking=_context.Bookings.FirstOrDefault(b=>b.Booking_id==id);
+
+            foreach (var item in booking.Booking_Rooms)
+            {
+                total += _context.Rooms.FirstOrDefault(r => r.Room_id == item.Room_id).Price;
+            }
+
+            return total;
+        }
+           
     }
 }

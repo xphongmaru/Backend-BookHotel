@@ -5,7 +5,7 @@ namespace BookHotel.Repositories.Admin
 {
     public interface IDiscountRepository
     {
-        //lay toan bo danh sach booking
+        public bool DiscountExist(string code);
 
     }
 }
