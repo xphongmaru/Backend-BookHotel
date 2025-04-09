@@ -86,7 +86,7 @@ public class RoomController : ControllerBase
                 Name = r.TypeRoom.Name,
                 Description = r.TypeRoom.Description
             },
-            TotalBookings = r.Bookings?.Count ?? 0,
+            TotalBookings = r.Booking_Rooms?.Count ?? 0,
             AvgRating = r.Reviews?.Any() == true ? r.Reviews.Average(rv => rv.Rating) : 0
         }).ToList();
 
