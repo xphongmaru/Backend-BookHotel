@@ -89,6 +89,9 @@ namespace BookHotel.DTOs
         [Required(ErrorMessage = "Địa chỉ không được để trống.")]
         public string Address { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "Ngày sinh không được để trống.")]
+        public string Bod { get; set; }
+
         [Required(ErrorMessage = "CCCD không được để trống.")]
         public string CCCD { get; set; } = string.Empty;
 
@@ -97,5 +100,35 @@ namespace BookHotel.DTOs
 
         [Required(ErrorMessage = "Role không được để trống.")]
         public int Role { get; set; }
+    }
+
+    public class ChangePassword()
+    {
+        [Required(ErrorMessage = "Mật khẩu cũ không được để trống.")]
+        public string oldPassword { get; set; }
+
+        [Required(ErrorMessage = "Mật khẩu mới không được để trống.")]
+        public string newPassword { get; set; }
+    }
+
+    public class ChangeInforGuess()
+    {
+        [Required(ErrorMessage = "Tên không được để trống.")]
+        public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Số điện thoại không được để trống.")]
+        public string PhoneNumber { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Địa chỉ không được để trống.")]
+        public string Address { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Ngày sinh không được để trống.")]
+        public string Bod { get; set; } 
+
+        [Required(ErrorMessage = "CCCD không được để trống.")]
+        public string CCCD { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Giới tính không được để trống.")]
+        public bool Gender { get; set; }
     }
 }
