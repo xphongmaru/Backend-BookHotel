@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
+
 namespace BookHotel.DTOs
 {
     public class RoomTypeDto
