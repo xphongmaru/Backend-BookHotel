@@ -16,7 +16,7 @@ using BookHotel.Constant;
 
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/room")]
 public class RoomController : ControllerBase
 {
     private readonly IRoomRepository _roomRepository;
@@ -216,9 +216,8 @@ public class RoomController : ControllerBase
         return Ok(new BaseResponse<List<RoomListDto>>(roomDtos));
     }
 
-
-    [HttpPost("create")]
     [Authorize(Roles = "admin")]
+    [HttpPost("create")]
     public async Task<IActionResult> CreateRoom([FromForm] CreateRoomDto dto)
     {
         if (!ModelState.IsValid)
@@ -278,7 +277,7 @@ public class RoomController : ControllerBase
             Price = dto.Price,
             Max_occupancy = dto.Max_occupancy,
             Description = dto.Description,
-            Status = dto.Status, // Đã được validate
+            Status = dto.Status, 
             Thumbnail = "/uploads/rooms/" + thumbnailFileName,
             TypeRoom_id = dto.TypeRoom_id,
             RoomPhotos = roomPhotos,
