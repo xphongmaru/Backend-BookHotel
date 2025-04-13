@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BookHotel.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookHotel.Controllers
 {
@@ -16,20 +17,31 @@ namespace BookHotel.Controllers
     {
         private readonly IBookingRoomRepository _bookingRoomRepository;
         private readonly AppDbContext _context;
-        public BookingRoomController(AppDbContext context,IBookingRoomRepository bookingRoomRepository)
+        public BookingRoomController(AppDbContext context, IBookingRoomRepository bookingRoomRepository)
         {
             _bookingRoomRepository = bookingRoomRepository;
             _context = context;
         }
 
         [HttpGet]
-        public async Task<ActionResult> GetBooking()
+        [Authorize]
+        public async Task<ActionResult> GetBookingRooms()
         {
             var bookingRoomList = await _bookingRoomRepository.GetBookingRoom();
-            return Ok(bookingRoomList);
+            return Ok(new ApiResponse(true, bookingRoomList, null));
         }
 
-       
+        [HttpGet("details")]
+        public  ActionResult GetBookingDetails([FromBody] int id)
+        {
+            var bookingRoomList =  _context.Booking_Rooms.Where(br => br.Booking_id == id);
+            return Ok(new ApiResponse(true, bookingRoomList, null));
+        }
+
+
+
+
+
     }
 
    

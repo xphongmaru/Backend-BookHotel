@@ -25,7 +25,7 @@ namespace BookHotel.Controllers
         }
         // GET: api/<UserController>
         [Authorize]
-        [HttpGet]
+        [HttpGet] 
         public async Task<ActionResult<IEnumerable<GetAllUserRequest>>> GetUsers()
         {
             //xác thực người dùng
