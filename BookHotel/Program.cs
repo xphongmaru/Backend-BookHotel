@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore;
 using BookHotel.Data;
 using BookHotel.Repositories.Admin;
 using BookHotel.Services.Mail;
@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using BookHotel.Services;
+
+using Microsoft.OpenApi.Models;
+using BookHotel.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +20,9 @@ builder.Services.AddDbContext<AppDbContext>(
 
 // Repositories
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<IBookingRepository,BookingRepository>();
+builder.Services.AddScoped<IBookingRoomRepository,BookingRoomRepository>();
+builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
 
 // Mail
 builder.Services.AddTransient<IEmailService, EmailService>();

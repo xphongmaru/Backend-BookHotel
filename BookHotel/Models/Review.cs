@@ -14,12 +14,15 @@ namespace BookHotel.Models
         [ForeignKey("Room")]
         public int Room_id { get; set; }
         [JsonIgnore]
-        public Room Room { get; set; } = new();
+        public Room Room { get; set; }
 
         [ForeignKey("Guess")]
         public int Guess_id { get; set; }
+
+        public bool Anonymous { get; set; } = false;
+
         [JsonIgnore]
-        public Guess Guess { get; set; } = new();
+        public Guess Guess { get; set; }
     }
 }
 
