@@ -13,8 +13,8 @@ namespace BookHotel.DTOs
         public float Discount_percentage { get; set; }
         public float Price_applies { get; set; }
         public float Max_discount { get; set; }
-        public DateTime Start_date { get; set; }
-        public DateTime End_date { get; set; }
+        public string Start_date { get; set; }=string.Empty;
+        public string End_date { get; set; }= string.Empty;
         public bool Status { get; set; }
     }
 
@@ -25,8 +25,8 @@ namespace BookHotel.DTOs
         public float Discount_percentage { get; set; }
         public float Price_applies { get; set; }
         public float Max_discount { get; set; }
-        public DateTime Start_date { get; set; }
-        public DateTime End_date { get; set; }
+        public string Start_date { get; set; }
+        public string End_date { get; set; }
     }
     
 }
