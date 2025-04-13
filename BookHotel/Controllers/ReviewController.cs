@@ -11,7 +11,7 @@ using System.Security.Claims;
 
 namespace BookHotel.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/review")]
     [ApiController]
     public class ReviewController : ControllerBase
     {
@@ -48,8 +48,8 @@ namespace BookHotel.Controllers
 
         // POST api/<ReviewController>
         [Authorize]
-        [HttpPost]
-        public async Task<ActionResult> CreateReview([FromBody] CreateReview request)
+        [HttpPost("{id}")]
+        public async Task<ActionResult> CreateReview(int id, [FromBody] CreateReview request)
         {
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
 
@@ -57,6 +57,10 @@ namespace BookHotel.Controllers
             var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
             if (guess == null)
                 return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
+
+            var isBooking = await _context.Bookings.FirstOrDefaultAsync(b => b.Guess_id == guess.Guess_id && b.Booking_id==id);
+            if (isBooking == null)
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Bạn chưa đặt phòng!", 400)));
 
             //kiểm tra người dùng đã đặt phòng chưa
             var isRoomBooking = await _context.Booking_Rooms.FirstOrDefaultAsync(br => br.Room_id == request.Room_id);
@@ -80,6 +84,10 @@ namespace BookHotel.Controllers
                 var result = await _context.SaveChangesAsync();
                 if (result > 0)
                 {
+                    // Cập nhật lại trạng thái của phòng
+                    isStatusBooking.Status = "Đã đánh giá";
+                    _context.Bookings.Update(isStatusBooking);
+                    await _context.SaveChangesAsync();
                     return Ok(new ApiResponse(true, "Thêm đánh giá thành công!", null));
                 }
                 else
