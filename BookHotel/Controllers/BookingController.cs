@@ -32,7 +32,7 @@ namespace BookHotel.Controllers
         {
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
             var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
-         if (guess == null)
+            if (guess == null)
                 return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
             if (guess.Role != 0)
                 return BadRequest(new ApiResponse(false, null, new ErrorResponse("Bạn không có quyền truy cập!", 400)));
@@ -51,7 +51,7 @@ namespace BookHotel.Controllers
                 var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
                 if (guess == null)
                     return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
-  
+
 
                 var booking = _context.Bookings.FirstOrDefault(b => b.Guess_id == guess.Guess_id && b.Status == Constant.BookingConstant.OPEN);
 
@@ -60,9 +60,9 @@ namespace BookHotel.Controllers
                     booking = new Booking
                     {
                         Status = Constant.BookingConstant.OPEN,
-                        Guess_id = guess.Guess_id,
-                        Check_in = DateTime.ParseExact(request.Check_in,"dd/MM/yyyy",null),
-                        Check_out = DateTime.ParseExact(request.Check_out, "dd/MM/yyyy", null)
+                        Guess_id =  guess.Guess_id,
+                        Check_in = DateTime.Parse(request.Check_in),
+                        Check_out = DateTime.Parse(request.Check_out),
                     };
                     _context.Bookings.Add(booking);
                     await _context.SaveChangesAsync();
@@ -72,15 +72,15 @@ namespace BookHotel.Controllers
                 {
                     booking.Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == booking.Booking_id).ToListAsync().Result;
                     
-                    if (DateTime.ParseExact(request.Check_out, "dd/MM/yyy", null) <= DateTime.ParseExact(request.Check_in,"dd/MM/yyy",null)) {
+                    if (DateTime.Parse(request.Check_out) <= DateTime.Parse(request.Check_in)) {
                         throw new Exception("check out phải >= ngày check in");
                     }   
 
-                    if (booking.Check_in != DateTime.ParseExact(request.Check_in,"dd/MM/yyy",null)) {
+                    if (booking.Check_in != DateTime.Parse(request.Check_in)) {
                         throw new Exception("không được đổi check in");
                     }
 
-                    if (booking.Check_out != DateTime.ParseExact(request.Check_out,"dd/MM/yyy",null)) {
+                    if (booking.Check_out != DateTime.Parse(request.Check_out)) {
                         throw new Exception("không được đổi check out");
                     }
 
@@ -119,7 +119,7 @@ namespace BookHotel.Controllers
                 var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
                 if (guess == null)
                     return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
-              
+
                 var booking = _context.Bookings.FirstOrDefault(b => b.Guess_id == guess.Guess_id && b.Status == Constant.BookingConstant.OPEN);
 
                 if (booking == null)
@@ -155,7 +155,7 @@ namespace BookHotel.Controllers
 
         [Authorize]
         [HttpPut("user")]
-        public async Task<ActionResult> processBooking( [FromBody] DiscountRequest request)
+        public async Task<ActionResult> processBooking([FromBody] DiscountRequest request)
         {
             try
             {
@@ -163,7 +163,7 @@ namespace BookHotel.Controllers
                 var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
                 if (guess == null)
                     return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
-                
+
 
                 var booking = _context.Bookings.FirstOrDefault(b => b.Guess_id == guess.Guess_id && b.Status == Constant.BookingConstant.OPEN);
                 
@@ -217,9 +217,9 @@ namespace BookHotel.Controllers
             }
         }
 
-        //[Authorize]
+        [Authorize]
         [HttpDelete("user")]
-        public async Task <ActionResult> deleteBookingItem([FromBody] BookingRoomDeleteRequest request)
+        public async Task <ActionResult> deleteBookingItem(int room_id)
         {
             try
             {
@@ -240,7 +240,7 @@ namespace BookHotel.Controllers
                     throw new Exception("Khong duoc xoa");
                 }
 
-                var bookingRoom = _context.Booking_Rooms.FirstOrDefault(br => br.Booking_id == booking.Booking_id&&br.Room_id==request.RoomId);
+                var bookingRoom = _context.Booking_Rooms.FirstOrDefault(br => br.Booking_id == booking.Booking_id&&br.Room_id==room_id);
 
                 if (bookingRoom == null) {
                     throw new Exception("Khong ton tai bookingRoom");
@@ -272,8 +272,8 @@ namespace BookHotel.Controllers
 
             var booking = _context.Bookings.FirstOrDefault(b => b.Booking_id ==request.Booking_id );   
 
-            booking.Check_in = DateTime.ParseExact(request.Check_in, "dd/MM/yyy", null);
-            booking.Check_out = DateTime.ParseExact(request.Check_out, "dd/MM/yyy", null);
+            booking.Check_in = DateTime.Parse(request.Check_in);
+            booking.Check_out = DateTime.Parse(request.Check_out);
             booking.Status=request.Status;
             booking.Description=request.Description;
             booking.Request=request.Request;

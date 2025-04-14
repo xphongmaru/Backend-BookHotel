@@ -22,9 +22,9 @@ namespace BookHotel.DTOs
 
     public class BookingRoomDeleteRequest
     {
-        public int bookingId { get; set; }
+        public int Booking_id { get; set; }
         
-        public int RoomId { get; set; }
+        public int room_id { get; set; }
     }
 
     public class DiscountRequest
