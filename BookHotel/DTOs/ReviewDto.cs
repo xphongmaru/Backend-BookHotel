@@ -5,7 +5,6 @@ namespace BookHotel.DTOs
 {
     public class CreateReview
     {
-        public int Guess_id { get; set; }
         public string Comment { get; set; } = string.Empty;
         [Range(1, 5, ErrorMessage = "Đánh giá phải từ 1 đến 5 sao.")]
         public int Rating { get; set; }
