@@ -72,15 +72,15 @@ namespace BookHotel.Controllers
                 {
                     booking.Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == booking.Booking_id).ToListAsync().Result;
                     
-                    if (DateTime.Parse( request.Check_out) <= DateTime.Parse( request.Check_in)) {
+                    if (DateTime.ParseExact(request.Check_out, "dd/MM/yyy", null) <= DateTime.ParseExact(request.Check_in,"dd/MM/yyy",null)) {
                         throw new Exception("check out phải >= ngày check in");
                     }   
 
-                    if (booking.Check_in != DateTime.Parse( request.Check_in)) {
+                    if (booking.Check_in != DateTime.ParseExact(request.Check_in,"dd/MM/yyy",null)) {
                         throw new Exception("không được đổi check in");
                     }
 
-                    if (booking.Check_out != DateTime.Parse( request.Check_out)) {
+                    if (booking.Check_out != DateTime.ParseExact(request.Check_out,"dd/MM/yyy",null)) {
                         throw new Exception("không được đổi check out");
                     }
 
