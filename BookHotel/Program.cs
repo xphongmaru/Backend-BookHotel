@@ -1,30 +1,33 @@
-    using Microsoft.EntityFrameworkCore;
-using BookHotel.Data;
-using BookHotel.Repositories.Admin;
-using BookHotel.Services.Mail;
-using BookHotel.Middlewares;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using BookHotel.Services;
 
-using Microsoft.OpenApi.Models;
+using BookHotel.Data;
 using BookHotel.Extensions;
+using BookHotel.Middlewares;
+using BookHotel.Repositories.Admin;
+using BookHotel.Services.Mail;
+using BookHotel.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// DbContext
 builder.Services.AddDbContext<AppDbContext>(
     options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
 // Repositories
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
-builder.Services.AddScoped<IBookingRepository,BookingRepository>();
-builder.Services.AddScoped<IBookingRoomRepository,BookingRoomRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IBookingRoomRepository, BookingRoomRepository>();
 builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
 
-// Mail
+// File upload
+builder.Services.AddScoped<FileService>();
+
+// Mail service
 builder.Services.AddTransient<IEmailService, EmailService>();
 
 // CORS
@@ -39,43 +42,60 @@ builder.Services.AddCors(options =>
         });
 });
 
-// JSON support UTF-8
+// JSON UTF-8 support
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
     });
 
-// JWT Authentication
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+
+//Cấu hình JWT Authentication
+builder.Services.AddJwtAuthentication(builder.Configuration);
+
+// Swagger + JWT token
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BookHotel", Version = "v1" });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-        };
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
     });
 
-builder.Services.AddAuthorization();
-
-//Upload ảnh
-builder.Services.AddScoped<FileService>();
-
-
-// Swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] { }
+        }
+    });
+});
 
 var app = builder.Build();
 
+// Middlewares
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseCors("AllowAllOrigins");
+
+app.UseStaticFiles();
+app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>
@@ -84,18 +104,10 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-app.UseHttpsRedirection();
-
-app.UseAuthentication(); 
-app.UseAuthorization();
-
 app.MapControllers();
 
-app.UseStaticFiles(); // Cho phép truy cập wwwroot
-
-
-// Cho phép ứng dụng chạy trên cổng
+// Listen on port
 app.Urls.Add("https://*:7242");
-//app.Urls.Add("http://*:5000");
+// app.Urls.Add("http://*:5000");
 
 app.Run();
