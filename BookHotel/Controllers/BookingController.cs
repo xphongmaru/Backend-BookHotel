@@ -61,8 +61,8 @@ namespace BookHotel.Controllers
                     {
                         Status = Constant.BookingConstant.OPEN,
                         Guess_id = guess.Guess_id,
-                        Check_in = DateTime.ParseExact(request.Check_in,"dd/MM/yyy",null),
-                        Check_out = DateTime.ParseExact(request.Check_out, "dd/MM/yyy", null)
+                        Check_in = DateTime.ParseExact(request.Check_in,"dd/MM/yyyy",null),
+                        Check_out = DateTime.ParseExact(request.Check_out, "dd/MM/yyyy", null)
                     };
                     _context.Bookings.Add(booking);
                     await _context.SaveChangesAsync();
