@@ -3,8 +3,10 @@ using BookHotel.Data;
 using BookHotel.DTOs;
 using BookHotel.Models;
 using BookHotel.Services.Mail;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
@@ -83,7 +85,8 @@ namespace BookHotel.Controllers
                 Address = request.Address,
                 CCCD = request.CCCD,
                 Gender = request.Gender,
-                OTP = _OTP
+                OTP = _OTP,
+                Thumbnail = "default-user.png",
             };
             _context.Guess.Add(guess);
             await _context.SaveChangesAsync();
@@ -171,6 +174,40 @@ namespace BookHotel.Controllers
                 return Ok(new ApiResponse(true, "Thay đổi mật khẩu mới thành công.", null));
             }
             
+        }
+
+        //GET api/< UserController >/
+        [Authorize]
+        [HttpGet("api/user/{id}")]
+        public async Task<ActionResult<GetUser>> GetUser(int id)
+        {
+            //xác thực người dùng
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+            var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
+            if (guess == null)
+                return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
+            
+            if (guess.Guess_id != id)
+                return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
+
+            var user = await _context.Guess.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound(new ApiResponse(false, null, new ErrorResponse("Không tìm thấy người dùng", 400)));
+
+            }
+            return new GetUser
+            {
+                Guess_id = user.Guess_id,
+                Name = user.Name,
+                PhoneNumber = user.PhoneNumber,
+                Email = user.Email,
+                Address = user.Address,
+                CCCD = user.CCCD,
+                Gender = user.Gender,
+                Thumbnail = $"{Request.Scheme}://{Request.Host}/uploads/users/{user.Thumbnail}",
+                Bod = user.Bod.ToString("dd-MM-yyyy", CultureInfo.InvariantCulture)
+            };
         }
     }
 }

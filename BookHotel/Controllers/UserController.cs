@@ -7,6 +7,7 @@ using BookHotel.Models;
 using BookHotel.Services.Mail;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using System.Globalization;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -77,7 +78,9 @@ namespace BookHotel.Controllers
                 CCCD = user.CCCD,
                 Gender = user.Gender,
                 Role = user.Role,
-                EmailVerify = user.EmailVerify
+                EmailVerify = user.EmailVerify,
+                Thumbnail = $"{Request.Scheme}://{Request.Host}/uploads/users/{user.Thumbnail}",
+                Bod = user.Bod.ToString("dd-MM-yyyy", CultureInfo.InvariantCulture)
             };
         }
 
@@ -110,7 +113,8 @@ namespace BookHotel.Controllers
                 Address = request.Address,
                 CCCD = request.CCCD,
                 Gender = request.Gender,
-                OTP = _OTP
+                OTP = _OTP,
+                Thumbnail = "default-user.png"
             };
             _context.Guess.Add(guess);
             await _context.SaveChangesAsync();
@@ -184,7 +188,7 @@ namespace BookHotel.Controllers
 
         [Authorize]
         [HttpPut("api/user/change-infor/{id}")]
-        public async Task<ActionResult> ChangeInfor(int id, [FromBody] ChangeInforGuess request)
+        public async Task<ActionResult> ChangeInfor(int id, [FromForm] ChangeInforGuess request)
         {
             //xác thực người dùng
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
@@ -195,12 +199,44 @@ namespace BookHotel.Controllers
             if (guess.Guess_id != id)
                 return BadRequest(new ApiResponse(false, null, new ErrorResponse("Lỗi xác thực người dùng.", 400)));
             
+            var thumbnail = request.Thumbnail;
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+
+            if (thumbnail != null)
+            {
+                var fileExtension = Path.GetExtension(thumbnail.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(fileExtension))
+                {
+                    return BadRequest(new ApiResponse(false, null, new ErrorResponse("Định dạng tệp không hợp lệ. Chỉ chấp nhận jpg, jpeg, png.", 400)));
+                }
+                if (thumbnail.Length > 2 * 1024 * 1024) // 2MB
+                {
+                    return BadRequest(new ApiResponse(false, null, new ErrorResponse("Kích thước tệp quá lớn. Tối đa 2MB.", 400)));
+                }
+                // Lưu tệp vào thư mục wwwroot/images
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot","uploads", "users");
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+                var fileName = $"{Guid.NewGuid()}{fileExtension}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await thumbnail.CopyToAsync(stream);
+                }
+                guess.Thumbnail = fileName;
+            }
+
             guess.Name = request.Name;
             guess.PhoneNumber = request.PhoneNumber;
             guess.Address = request.Address;
             guess.CCCD = request.CCCD;
             guess.Gender = request.Gender;
             guess.Bod = DateTime.Parse(request.Bod);
+
+
             _context.Entry(guess).State = EntityState.Modified;
             await _context.SaveChangesAsync();
             return Ok(new ApiResponse(true, "Cập nhật thông tin thành công.", null));

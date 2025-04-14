@@ -63,7 +63,22 @@ namespace BookHotel.DTOs
         public bool Gender { get; set; }
         public int Role { get; set; } = 0;
         public bool EmailVerify { get; set; }
-
+        public string Thumbnail { get; set; } = string.Empty;
+        public string Bod { get; set; } = string.Empty;
+    }
+    public class GetUser
+    {
+        public int Guess_id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public string CCCD { get; set; } = string.Empty;
+        public bool Gender { get; set; }
+        public int Role { get; set; } = 0;
+        public bool EmailVerify { get; set; }
+        public string Thumbnail { get; set; } = string.Empty;
+        public string Bod { get; set; } = string.Empty;
     }
 
     public class GetAllUserRequest
@@ -102,6 +117,7 @@ namespace BookHotel.DTOs
         public int Role { get; set; }
     }
 
+
     public class ChangePassword()
     {
         [Required(ErrorMessage = "Mật khẩu cũ không được để trống.")]
@@ -130,5 +146,7 @@ namespace BookHotel.DTOs
 
         [Required(ErrorMessage = "Giới tính không được để trống.")]
         public bool Gender { get; set; }
+
+        public IFormFile? Thumbnail { get; set; } = null;
     }
 }
