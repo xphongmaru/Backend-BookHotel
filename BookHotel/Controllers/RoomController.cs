@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BookHotel.Repositories.Admin;
-using BookHotel.Response;
+using BookHotel.Responsee;
 using Microsoft.EntityFrameworkCore;
 using BookHotel.Data;
 using BookHotel.Exceptions;
