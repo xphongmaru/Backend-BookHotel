@@ -10,6 +10,7 @@ using BookHotel.Middlewares;
 using BookHotel.Repositories.Admin;
 using BookHotel.Services.Mail;
 using BookHotel.Services;
+using BookHotel.Profiles;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,9 +21,13 @@ builder.Services.AddDbContext<AppDbContext>(
 
 // Repositories
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<ITypeRoomRepository, TypeRoomRepository>();
+builder.Services.AddScoped<IAmenityRepository, AmenityRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IBookingRoomRepository, BookingRoomRepository>();
 builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
+
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // File upload
 builder.Services.AddScoped<FileService>();

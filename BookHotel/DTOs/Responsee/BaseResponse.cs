@@ -1,4 +1,4 @@
-﻿namespace BookHotel.Response
+﻿namespace BookHotel.Responsee
 {
     public class BaseResponse<T>
     {

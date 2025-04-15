@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System.Net;
 using System.Text.Json;
-using BookHotel.Response;
+using BookHotel.Responsee;
 using BookHotel.Exceptions;
 
 namespace BookHotel.Middlewares
