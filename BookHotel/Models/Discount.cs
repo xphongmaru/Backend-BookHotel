@@ -17,6 +17,8 @@ namespace BookHotel.Models
         [JsonIgnore]
         public List<Booking_Discount> Booking_Discounts { get; set; } = new();
 
+        public int Quantity { get; set; }
+
     }
 
 }

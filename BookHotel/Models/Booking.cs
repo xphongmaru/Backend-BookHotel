@@ -26,6 +26,8 @@ namespace BookHotel.Models
 
         [JsonIgnore]
         public List<Booking_Discount> Booking_Discounts { get; set; } = new();
+        public decimal Total { get; set; } = 0;
+        public string DiscountCode { get; set; } = string.Empty;
     }
 }
 

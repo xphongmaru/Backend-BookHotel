@@ -4,6 +4,7 @@ using BookHotel.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BookHotel.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250415182206_AddTotalBooking")]
+    partial class AddTotalBooking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -71,10 +74,6 @@ namespace BookHotel.Migrations
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DiscountCode")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -191,9 +190,6 @@ namespace BookHotel.Migrations
 
                     b.Property<float>("Price_applies")
                         .HasColumnType("real");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("Start_date")
                         .HasColumnType("datetime2");

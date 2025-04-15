@@ -43,5 +43,41 @@ namespace BookHotel.DTOs
         public string Phone_Guess { get; set; } = string.Empty;
     }
 
-    
+    public class CheckoutCreateRequest
+    {
+        public string Check_in { get; set; } = string.Empty;
+        public string Check_out { get; set; } = string.Empty;
+        public string Discount { get; set; } = string.Empty;
+        public List<Rooms> Rooms { get; set; }
+    }
+
+    public class Rooms
+    {
+        public int Room_id { get; set; }
+        public int Quantity { get; set; }
+        public string Name_Guess { get; set; } = string.Empty;
+        public string Phone_Guess { get; set; } = string.Empty;
+    }
+
+    public class GetBookingRequest
+    {
+        public string Check_in { get; set; } = string.Empty;
+        public string Check_out { get; set; } = string.Empty;
+        public string Discount { get; set; } = string.Empty;
+        public decimal total { get; set; }
+        public int totalDays { get; set; }
+        public decimal discount_value { get; set; }
+        public decimal totalDiscount { get; set; }
+        public List<Rooms> Rooms { get; set; } = new();
+    }
+
+    public class BookingRequest
+    {
+        public string Check_in { get; set; } = string.Empty;
+        public string Check_out { get; set; } = string.Empty;
+        public string Request { get; set; } = string.Empty;
+        public string Discount { get; set; } = string.Empty;
+        public decimal Total { get; set; }
+        public List<Rooms> Rooms { get; set; } = new();
+    }
 }
