@@ -7,11 +7,11 @@
         public const string CLOSED = "Closed";
 
         public const string OPEN= "Open";
-
-        public const string CHECKIN = "Checkin";
-
-        public const string CHECKOUT = "Closed";
-
+         
         public const string CANCEL = "Cancel";
+
+        public const string REJECTED = "Rejected";
+
+        public const string APPROVED = "Approved";
     }
 }
