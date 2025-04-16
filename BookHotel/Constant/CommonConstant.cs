@@ -10,7 +10,8 @@
 
         public const string CHECKIN = "Checkin";
 
-        public const string CHECKOUT = "Closed" +
-            "";
+        public const string CHECKOUT = "Closed";
+
+        public const string CANCEL = "Cancel";
     }
 }
