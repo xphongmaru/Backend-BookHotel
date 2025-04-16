@@ -15,7 +15,13 @@ namespace BookHotel.DTOs
         public string Password { get; set; } = string.Empty;
     }
 
-    public class GuessRegisterRequest
+    public class AuthGuessRespone
+    {
+        public string Token { get; set; } = string.Empty;
+        public GetUser User { get; set; } = new GetUser();
+    }
+
+        public class GuessRegisterRequest
     {
         [Required(ErrorMessage = "Email không được để trống.")]
         [EmailAddress(ErrorMessage = "Email không đúng định dạng.")]

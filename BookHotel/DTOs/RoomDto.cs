@@ -31,8 +31,10 @@ namespace BookHotel.DTOs
         public string Content { get; set; } = string.Empty;
         public int Rating { get; set; }
         public string ReviewerName { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; }
-        
+        public string ReviewerThumbnail { get; set; } = string.Empty;
+        public string CreatedAt { get; set; }
+
+
     }
 }
 

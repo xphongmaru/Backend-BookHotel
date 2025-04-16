@@ -22,6 +22,9 @@ namespace BookHotel.Repositories.Admin
             return await _context.TypeRooms.ToListAsync();
         }
 
+        
+
+
         public async Task<TypeRoom> GetByIdAsync(int id)
         {
             return await _context.TypeRooms.FindAsync(id);

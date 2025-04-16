@@ -17,14 +17,9 @@ namespace BookHotel.Repositories.Admin
 
         // Phân loại phòng - phân quyền admin
         Task<List<Room>> FilterRoomsAsync(
-            string? name,
-            int? maxOccupancy,
-            int? typeRoomId,
-            decimal? minPrice,
-            decimal? maxPrice,
-            string? status,
-            double? minRating,
-            ClaimsPrincipal user);
+            string? name, int? maxOccupancy, int? typeRoomId,
+            decimal? minPrice, decimal? maxPrice, string? status,
+            double? minRating, List<int>? amenityIds, ClaimsPrincipal user);
 
         // Tạo phòng - chỉ cho admin (controller đã kiểm soát)
         Task<Room> CreateRoomAsync(Room room);

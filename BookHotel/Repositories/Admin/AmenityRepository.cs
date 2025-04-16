@@ -1,4 +1,5 @@
 ﻿using BookHotel.Data;
+using BookHotel.DTOs;
 using BookHotel.Exceptions;
 using BookHotel.Models;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,21 @@ namespace BookHotel.Repositories.Admin
         public async Task<IEnumerable<Amenities>> GetAllAsync()
         {
             return await _context.Amenities.ToListAsync();
+        }
+
+        public async Task<List<AmenitiesDto>> GetAmenitiesByRoomIdAsync(int roomId)
+        {
+            var amenities = await _context.Room_Amenities
+                .Where(ra => ra.Room_id == roomId && ra.Amenities != null)
+                .Select(ra => new AmenitiesDto
+                {
+                    Amenities_id = ra.Amenities.Amenities_id,
+                    Name = ra.Amenities.Name,
+                    Description = ra.Amenities.Description
+                })
+                .ToListAsync();
+
+            return amenities;
         }
 
         public async Task<Amenities?> GetByIdAsync(int id)

@@ -63,7 +63,27 @@ namespace BookHotel.Controllers
                 signingCredentials: new SigningCredentials(authSigninKey, SecurityAlgorithms.HmacSha256)
             );
 
-            return Ok(new ApiResponse(true, new { token = new JwtSecurityTokenHandler().WriteToken(token) }, null));
+            var user = new AuthGuessRespone
+            {
+                Token = new JwtSecurityTokenHandler().WriteToken(token),
+                User = new GetUser
+                {
+                    Guess_id = guess.Guess_id,
+                    Name = guess.Name,
+                    PhoneNumber = guess.PhoneNumber,
+                    Email = guess.Email,
+                    Address = guess.Address,
+                    CCCD = guess.CCCD,
+                    Gender = guess.Gender,
+                    Role = guess.Role,
+                    EmailVerify = guess.EmailVerify,
+                    Thumbnail = $"{Request.Scheme}://{Request.Host}/uploads/users/{guess.Thumbnail}",
+                    Bod = guess.Bod.ToString("dd-MM-yyyy", CultureInfo.InvariantCulture)
+                }
+            };
+             
+
+            return Ok(new ApiResponse(true, user, null));
         }
 
         [HttpPost("register")]
@@ -174,40 +194,6 @@ namespace BookHotel.Controllers
                 return Ok(new ApiResponse(true, "Thay đổi mật khẩu mới thành công.", null));
             }
             
-        }
-
-        //GET api/< UserController >/
-        [Authorize]
-        [HttpGet("api/user/{id}")]
-        public async Task<ActionResult<GetUser>> GetUser(int id)
-        {
-            //xác thực người dùng
-            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
-            var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
-            if (guess == null)
-                return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
-            
-            if (guess.Guess_id != id)
-                return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
-
-            var user = await _context.Guess.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound(new ApiResponse(false, null, new ErrorResponse("Không tìm thấy người dùng", 400)));
-
-            }
-            return new GetUser
-            {
-                Guess_id = user.Guess_id,
-                Name = user.Name,
-                PhoneNumber = user.PhoneNumber,
-                Email = user.Email,
-                Address = user.Address,
-                CCCD = user.CCCD,
-                Gender = user.Gender,
-                Thumbnail = $"{Request.Scheme}://{Request.Host}/uploads/users/{user.Thumbnail}",
-                Bod = user.Bod.ToString("dd-MM-yyyy", CultureInfo.InvariantCulture)
-            };
         }
     }
 }
