@@ -70,16 +70,18 @@ public class RoomController : ControllerBase
                     Description = a.Amenities.Description
                 })
                 .ToList(),
-            Reviews = room.Reviews
-                .Select(r => new ReviewDto
-                {
-                    Review_id = r.Review_id,
-                    Content = r.Comment,
-                    Rating = r.Rating,
-                    ReviewerName = r.Guess?.Name ?? "Ẩn danh",
-                    CreatedAt = r.CreatedAt
-                })
-                .ToList()
+                Reviews = room.Reviews
+                    .Select(r => new ReviewDto
+                    {
+                        Review_id = r.Review_id,
+                        Content = r.Comment,
+                        Rating = r.Rating,
+                        ReviewerName = r.Anonymous ? "Ẩn danh" : (r.Guess?.Name ?? "Ẩn danh"),
+                        ReviewerThumbnail = r.Anonymous ? "" : (r.Guess?.Thumbnail ?? ""),
+                        CreatedAt = r.CreatedAt.ToString("dd/MM/yyyy")
+                    })
+                    .ToList()
+
         };
 
         return Ok(new BaseResponse<RoomDto>(roomDto));
@@ -189,10 +191,71 @@ public class RoomController : ControllerBase
         decimal? minPrice = null,
         decimal? maxPrice = null,
         string? status = null,
-        double? minRating = null)
+        double? minRating = null,
+        [FromQuery] List<int>? amenityIds = null)
     {
+        // Tên phòng kiểm tra ký tự đặc biệt
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            if (name.Length > 100)
+                throw new BadRequestException("Tên phòng quá dài.");
+            if (name.Any(c => "!@#$%^&*()+=[]{}<>?/\\|~`".Contains(c)))
+                throw new BadRequestException("Tên phòng không được chứa ký tự đặc biệt.");
+        }
+
+        // Sức chứa tối đa
+        if (maxOccupancy.HasValue && maxOccupancy <= 0)
+            throw new BadRequestException("Sức chứa tối đa phải lớn hơn 0.");
+
+        // Giá
+        if (minPrice < 0 || maxPrice < 0)
+            throw new BadRequestException("Giá không được âm.");
+        if (minPrice.HasValue && maxPrice.HasValue && minPrice > maxPrice)
+            throw new BadRequestException("Giá tối thiểu không được lớn hơn giá tối đa.");
+
+        // Đánh giá
+        if (minRating < 0 || minRating > 5)
+            throw new BadRequestException("Đánh giá trung bình phải từ 0 đến 5.");
+
+        // Trạng thái hợp lệ
+        var allowedStatuses = new[] { RoomStatus.Available, RoomStatus.Unavailable, RoomStatus.Hidden };
+        if (!string.IsNullOrWhiteSpace(status) && !allowedStatuses.Contains(status, StringComparer.OrdinalIgnoreCase))
+            throw new BadRequestException($"Trạng thái không hợp lệ. Chỉ chấp nhận: {string.Join(", ", allowedStatuses)}");
+
+        // Kiểu phòng tồn tại
+        if (typeRoomId.HasValue)
+        {
+            var exists = await _context.TypeRooms.AnyAsync(t => t.TypeRoom_id == typeRoomId.Value);
+            if (!exists)
+                throw new BadRequestException("Kiểu phòng không tồn tại.");
+        }
+
+        // Tiện nghi hợp lệ
+        if (amenityIds != null && amenityIds.Any())
+        {
+            if (amenityIds.Any(id => id <= 0))
+                throw new BadRequestException("Tất cả ID tiện nghi phải là số nguyên dương.");
+
+            var validAmenityIds = await _context.Amenities
+                .Where(a => amenityIds.Contains(a.Amenities_id))
+                .Select(a => a.Amenities_id)
+                .ToListAsync();
+
+            var invalidIds = amenityIds.Except(validAmenityIds).ToList();
+            if (invalidIds.Any())
+                throw new BadRequestException($"Các tiện nghi không tồn tại: {string.Join(", ", invalidIds)}");
+        }
+
+        // Lọc
         var rooms = await _roomRepository.FilterRoomsAsync(
-            name, maxOccupancy, typeRoomId, minPrice, maxPrice, status, minRating, User);
+            name, maxOccupancy, typeRoomId, minPrice, maxPrice, status, minRating, amenityIds, User);
+
+        if (!rooms.Any())
+        {
+            if (!string.IsNullOrWhiteSpace(name))
+                throw new NotFoundException($"Không tìm thấy phòng với tên chứa '{name}'.");
+            throw new NotFoundException("Không tìm thấy phòng phù hợp với điều kiện lọc.");
+        }
 
         var roomDtos = rooms.Select(r => new RoomListDto
         {
@@ -209,15 +272,23 @@ public class RoomController : ControllerBase
                 Description = r.TypeRoom.Description
             },
             TotalBookings = r.Booking_Rooms.Count,
-            TotalRevenue = r.Booking_Rooms.Sum(b => b.Price * b.Quantity), 
-            AvgRating = r.Reviews?.Any() == true ? r.Reviews.Average(rev => rev.Rating) : 0 
+            TotalRevenue = r.Booking_Rooms.Sum(b => b.Price * b.Quantity),
+            AvgRating = r.Reviews?.Any() == true ? r.Reviews.Average(rev => rev.Rating) : 0,
+            RoomAmenities = r.Room_Amenities.Select(ra => new AmenitiesDto
+            {
+                Amenities_id = ra.Amenities.Amenities_id,
+                Name = ra.Amenities.Name,
+                Description = ra.Amenities.Description
+            }).ToList()
         }).ToList();
 
         return Ok(new BaseResponse<List<RoomListDto>>(roomDtos));
     }
 
+
+
     [Authorize(Roles = "admin")]
-    [HttpPost("create")]
+    [HttpPost("admin/create")]
     public async Task<IActionResult> CreateRoom([FromForm] CreateRoomDto dto)
     {
         if (!ModelState.IsValid)
@@ -295,7 +366,7 @@ public class RoomController : ControllerBase
 
 
     [Authorize(Roles = "admin")]
-    [HttpPut("update-room/{roomId}")]
+    [HttpPut("admin/update-room/{roomId}")]
     public async Task<IActionResult> UpdateRoom(int roomId, [FromForm] UpdateRoomDto dto)
     {
         if (!ModelState.IsValid)
@@ -315,7 +386,7 @@ public class RoomController : ControllerBase
 
 
     [Authorize(Roles = "admin")]
-    [HttpDelete("{roomId}")]
+    [HttpDelete("admin/{roomId}")]
     public async Task<IActionResult> DeleteRoom(int roomId)
     {
         await _roomRepository.DeleteRoomAsync(roomId);
@@ -324,7 +395,7 @@ public class RoomController : ControllerBase
 
 
     [Authorize(Roles = "admin")]
-    [HttpPut("{id}/hide")]
+    [HttpPut("admin/{id}/hide")]
     public async Task<IActionResult> HideRoom(int id)
     {
         var (success, message) = await _roomRepository.HideRoomAsync(id);
