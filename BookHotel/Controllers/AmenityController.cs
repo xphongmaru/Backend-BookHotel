@@ -36,10 +36,30 @@ public class AmenityController : ControllerBase
         return Ok(new BaseResponse<IEnumerable<AmenityDto>>(result));
     }
 
-    [HttpGet("get-by-id/{id}")]
+    [HttpGet("get-amenities-by-room/{roomId}")]
+    public async Task<IActionResult> GetAmenitiesByRoomId(int roomId)
+    {
+        var amenities = await _repository.GetAmenitiesByRoomIdAsync(roomId);
+
+        if (roomId <= 0)
+            return BadRequest(new BaseResponse<string>("ID phòng phải là số nguyên >0!", 400));
+
+        if (amenities == null || !amenities.Any())
+        {
+            return NotFound(new BaseResponse<string>("Phòng không tồn tại", 404));
+        }
+
+        return Ok(new BaseResponse<List<AmenitiesDto>>(amenities));
+    }
+
+    [Authorize(Roles = "admin")]
+    [HttpGet("admin/get-by-id/{id}")]
     public async Task<IActionResult> GetById(int id)
     {
         var data = await _repository.GetByIdAsync(id);
+        if (id <= 0)
+            return BadRequest(new BaseResponse<string>("ID phải là số nguyên >0!", 400));
+
         if (data == null)
             return NotFound(new BaseResponse<string>("Không tìm thấy tiện nghi", 404));
 
@@ -47,7 +67,8 @@ public class AmenityController : ControllerBase
         return Ok(new BaseResponse<AmenityDto>(result));
     }
 
-    [HttpPost("create")]
+    [Authorize(Roles = "admin")]
+    [HttpPost("admin/create")]
     public async Task<IActionResult> Create([FromBody] AmenityCreateDto dto)
     {
         if (!ModelState.IsValid)
@@ -65,13 +86,16 @@ public class AmenityController : ControllerBase
         }
     }
 
-    [HttpPut("update/{id}")]
+    [Authorize(Roles = "admin")]
+    [HttpPut("admin/update/{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] AmenityCreateDto dto)
     {
         try
         {
             var amenity = _mapper.Map<Amenities>(dto);
             var success = await _repository.UpdateAsync(id, amenity);
+            if (id <= 0)
+                return BadRequest(new BaseResponse<string>("ID phải là số nguyên >0!", 400));
             if (!success)
                 return NotFound(new BaseResponse<string>("Không tìm thấy tiện nghi", 404));
 
@@ -83,12 +107,15 @@ public class AmenityController : ControllerBase
         }
     }
 
-    [HttpDelete("delete/{id}")]
+    [Authorize(Roles = "admin")]
+    [HttpDelete("admin/delete/{id}")]
     public async Task<IActionResult> Delete(int id)
     {
         try
         {
             var success = await _repository.DeleteAsync(id);
+            if (id <= 0)
+                return BadRequest(new BaseResponse<string>("ID phải là số nguyên >0!", 400));
             if (!success)
                 return NotFound(new BaseResponse<string>("Không tìm thấy tiện nghi", 404));
 

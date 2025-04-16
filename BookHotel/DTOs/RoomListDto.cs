@@ -15,7 +15,9 @@ namespace BookHotel.DTOs
         public decimal TotalRevenue { get; set; }
         public double AvgRating { get; set; }
 
-        public string Status { get; set; } = string.Empty; // ➕ Trường trạng thái phòng
+        public List<AmenitiesDto> RoomAmenities { get; set; }
+
+        public string Status { get; set; } = string.Empty; // Trường trạng thái phòng
 
         public TypeRoomDto? TypeRoom { get; set; } // Dùng DTO thay vì object
     }

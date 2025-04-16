@@ -84,11 +84,11 @@ namespace BookHotel.Repositories.Admin
             return await query.ToListAsync();
         }
 
-        // Phân loại phòng
+        // Lọc phòng
         public async Task<List<Room>> FilterRoomsAsync(
             string? name, int? maxOccupancy, int? typeRoomId,
             decimal? minPrice, decimal? maxPrice, string? status,
-            double? minRating, ClaimsPrincipal user)
+            double? minRating, List<int>? amenityIds, ClaimsPrincipal user)
         {
             bool isAdmin = IsAdmin(user);
 
@@ -97,6 +97,8 @@ namespace BookHotel.Repositories.Admin
                 .Include(r => r.RoomPhotos)
                 .Include(r => r.Booking_Rooms)
                 .Include(r => r.Reviews)
+                .Include(r => r.Room_Amenities)
+                    .ThenInclude(ra => ra.Amenities) // ✅ lấy thông tin tiện nghi
                 .AsQueryable();
 
             query = query
@@ -111,8 +113,17 @@ namespace BookHotel.Repositories.Admin
                     (isAdmin || r.Status != RoomStatus.Hidden)
                 );
 
+            // Lọc theo danh sách tiện nghi
+            if (amenityIds != null && amenityIds.Any())
+            {
+                query = query.Where(r =>
+                    amenityIds.All(aid => r.Room_Amenities.Any(ra => ra.Amenities_id == aid)));
+            }
+
             return await query.ToListAsync();
         }
+
+
 
 
         //Thêm phòng
@@ -144,7 +155,7 @@ namespace BookHotel.Repositories.Admin
             if (!allAmenitiesExist)
                 return (false, "Một hoặc nhiều tiện nghi không tồn tại");
 
-            // ✅ Validate trạng thái nếu cần
+            // Validate trạng thái nếu cần
             var validStatuses = new[] { RoomStatus.Available, RoomStatus.Hidden, RoomStatus.Unavailable };
             if (!validStatuses.Contains(dto.Status))
                 return (false, "Trạng thái phòng không hợp lệ");
