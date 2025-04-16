@@ -23,13 +23,59 @@ namespace BookHotel.Controllers
         }
 
         // GET api/<ReviewController>/5
+        [Authorize]
+        [HttpGet("admin")]
+        public async Task<ActionResult<IEnumerable<GetAllReview>>> GetAllReview(int page = 1, int pageSize = 10)
+        {
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+            // Lấy Guess_id từ Email thay vì từ request (để an toàn hơn)
+            var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
+            if (guess == null)
+                return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
+            if (guess.Role != 0)
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Bạn không có quyền xóa đánh giá!", 400)));
+
+            var totalCount = await _context.Reviews.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            var reviews = await _context.Reviews
+                .Include(r => r.Guess)
+                .Include(r => r.Room)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(r => new GetAllReview
+                {
+                    Review_id = r.Review_id,
+                    Room_name = r.Room.Name,
+                    Rating = r.Rating,
+                    Comment = r.Comment,
+                    Guess_name = r.Guess.Name,
+                    CreatedAt = r.CreatedAt,
+                })
+                .ToListAsync();
+                var response = new
+                {
+                    currentPage = page,
+                    pageSize = pageSize,
+                    totalPages = totalPages,
+                    totalItems = totalCount,
+                    items = reviews
+                };
+            if (reviews.Count == 0)
+            {
+                return NotFound(new ApiResponse(true, "Không tìm thấy đánh giá nào cho phòng này",null));
+            }
+            else
+                return Ok(response);
+        }
+
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<GetAllReview>>> GetAllReviewRoom(int room_id)
+        public async Task<ActionResult<IEnumerable<GetAllReviewRoom>>> GetAllReviewRoom(int room_id)
         {
             var reviews = await _context.Reviews
                 .Where(r => r.Room_id == room_id)
                 .Include(r => r.Guess)
-                .Select(r => new GetAllReview
+                .Select(r => new GetAllReviewRoom
                 {
                     Review_id = r.Review_id,
                     Rating = r.Rating,
@@ -38,13 +84,14 @@ namespace BookHotel.Controllers
                     CreatedAt = r.CreatedAt,
                 })
                 .ToListAsync();
-            if(reviews.Count == 0)
+            if (reviews.Count == 0)
             {
-                return NotFound(new ApiResponse(true, "Không tìm thấy đánh giá nào cho phòng này",null));
+                return NotFound(new ApiResponse(true, "Không tìm thấy đánh giá nào cho phòng này", null));
             }
             else
                 return Ok(reviews);
         }
+
 
         // POST api/<ReviewController>
         [Authorize]
