@@ -26,11 +26,6 @@ namespace BookHotel.Controllers
              _context = context;
          }
 
-        public BookingController(AppDbContext context)
-        {
-            _context = context;
-        }
-
 
         [Authorize]
         [HttpPost("checkout")]
@@ -251,7 +246,7 @@ namespace BookHotel.Controllers
             if (request.Guess_id != 0 && request.startdate != string.Empty && request.enddate != string.Empty)
             {
                 var bookingList = await _context.Bookings
-                .Where(b => b.Guess_id == request.Guess_id && b.CreatedAt > DateTime.Parse(request.startdate) && b.CreatedAt < DateTime.Parse(request.enddate))
+                .Where(b => b.Guess_id == request.Guess_id && b.CreatedAt >= DateTime.Parse(request.startdate) && b.CreatedAt <= DateTime.Parse(request.enddate))
                 .Select(b =>
                     new getAllBookingRespone
                     {
@@ -270,7 +265,7 @@ namespace BookHotel.Controllers
             else if (request.Guess_id == 0 && request.startdate != string.Empty && request.enddate != string.Empty)
             {
                 var bookingList = await _context.Bookings
-                .Where(b => b.CreatedAt > DateTime.Parse(request.startdate) && b.CreatedAt < DateTime.Parse(request.enddate))
+                .Where(b => b.CreatedAt >= DateTime.Parse(request.startdate) && b.CreatedAt <= DateTime.Parse(request.enddate))
                 .Select(b =>
                     new getAllBookingRespone
                     {
@@ -310,7 +305,7 @@ namespace BookHotel.Controllers
                 if (request.startdate != string.Empty)
                 {
                     var bookingList = await _context.Bookings
-                   .Where(b => b.CreatedAt == DateTime.Parse(request.startdate))
+                   .Where(b => b.CreatedAt.Date == DateTime.Parse(request.startdate).Date)
                    .Select(b =>
                        new getAllBookingRespone
                        {
@@ -328,7 +323,7 @@ namespace BookHotel.Controllers
                 else
                 {
                     var bookingList = await _context.Bookings
-                  .Where(b => b.CreatedAt == DateTime.Parse(request.enddate))
+                  .Where(b => b.CreatedAt.Date == DateTime.Parse(request.enddate).Date)
                   .Select(b =>
                       new getAllBookingRespone
                       {
@@ -350,7 +345,7 @@ namespace BookHotel.Controllers
                 if (request.startdate != string.Empty)
                 {
                     var bookingList = await _context.Bookings
-                   .Where(b => b.Guess_id == b.Guess_id && b.CreatedAt == DateTime.Parse(request.startdate))
+                   .Where(b => b.Guess_id == b.Guess_id && b.CreatedAt.Date == DateTime.Parse(request.startdate).Date)
                    .Select(b =>
                        new getAllBookingRespone
                        {
@@ -368,7 +363,7 @@ namespace BookHotel.Controllers
                 else
                 {
                     var bookingList = await _context.Bookings
-                  .Where(b => b.Guess_id == request.Guess_id && b.CreatedAt == DateTime.Parse(request.enddate))
+                  .Where(b => b.Guess_id == request.Guess_id && b.CreatedAt.Date == DateTime.Parse(request.enddate).Date)
                   .Select(b =>
                       new getAllBookingRespone
                       {
@@ -462,7 +457,7 @@ namespace BookHotel.Controllers
             if(request.startdate != string.Empty && request.enddate != string.Empty)
             {
                 var bookingList = await _context.Bookings
-              .Where(b => b.Guess_id == guess.Guess_id&&b.CreatedAt>DateTime.Parse(request.startdate)&&b.CreatedAt<DateTime.Parse(request.enddate))
+              .Where(b => b.Guess_id == guess.Guess_id&&b.CreatedAt>=DateTime.Parse(request.startdate)&&b.CreatedAt<=DateTime.Parse(request.enddate))
               .Select(b =>
                   new getAllBookingRespone
                   {
@@ -481,7 +476,7 @@ namespace BookHotel.Controllers
             }else if(request.startdate != string.Empty && request.enddate==string.Empty)
             {
                 var bookingList = await _context.Bookings
-             .Where(b => b.Guess_id == guess.Guess_id && b.CreatedAt == DateTime.Parse(request.startdate))
+             .Where(b => b.Guess_id == guess.Guess_id && b.CreatedAt.Date == DateTime.Parse(request.startdate).Date)
              .Select(b =>
                  new getAllBookingRespone
                  {
@@ -500,7 +495,7 @@ namespace BookHotel.Controllers
             else if(request.startdate==string.Empty&& request.enddate != string.Empty)
             {
                 var bookingList = await _context.Bookings
-             .Where(b => b.Guess_id == guess.Guess_id && b.CreatedAt == DateTime.Parse(request.enddate))
+             .Where(b => b.Guess_id == guess.Guess_id && b.CreatedAt.Date == DateTime.Parse(request.enddate).Date)
              .Select(b =>
                  new getAllBookingRespone
                  {

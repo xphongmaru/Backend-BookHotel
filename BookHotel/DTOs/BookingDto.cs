@@ -12,11 +12,11 @@ namespace BookHotel.DTOs
         public int Booking_id { get; set; }
         public string Check_in { get; set; } = string.Empty;
         public string Check_out { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
+       
         public string Status { get; set; } = string.Empty;
         public string Request { get; set; } = string.Empty;
         public decimal total { get; set; }
-        public int Guess_id { get; set; }
+     
         public List<Booking_Room> Booking_Rooms { get; set; } = new();
     }
 
