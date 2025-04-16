@@ -297,6 +297,12 @@ public class RoomController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(new BaseResponse<string>("Dữ liệu không hợp lệ", 400));
 
+        //Kiểm tra tên phòng trùng không
+        var isDuplicate = await _context.Rooms
+        .AnyAsync(r => r.Name.ToLower() == dto.Name.ToLower());
+        if (isDuplicate)
+            return BadRequest(new BaseResponse<string>("Tên phòng đã tồn tại", 400));
+
         // Validate loại phòng
         var typeRoom = await _context.TypeRooms.FindAsync(dto.TypeRoom_id);
         if (typeRoom == null)
