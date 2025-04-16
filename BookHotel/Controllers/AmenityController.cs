@@ -39,14 +39,19 @@ public class AmenityController : ControllerBase
     [HttpGet("get-amenities-by-room/{roomId}")]
     public async Task<IActionResult> GetAmenitiesByRoomId(int roomId)
     {
-        var amenities = await _repository.GetAmenitiesByRoomIdAsync(roomId);
-
         if (roomId <= 0)
             return BadRequest(new BaseResponse<string>("ID phòng phải là số nguyên >0!", 400));
 
-        if (amenities == null || !amenities.Any())
+        var amenities = await _repository.GetAmenitiesByRoomIdAsync(roomId);
+
+        if (amenities == null)
         {
-            return NotFound(new BaseResponse<string>("Phòng không tồn tại", 404));
+            return NotFound(new BaseResponse<string>("Phòng không tồn tại!", 404));
+        }
+
+        if (!amenities.Any())
+        {
+            return Ok(new BaseResponse<string>("Phòng không có tiện nghi!"));
         }
 
         return Ok(new BaseResponse<List<AmenitiesDto>>(amenities));
@@ -61,7 +66,7 @@ public class AmenityController : ControllerBase
             return BadRequest(new BaseResponse<string>("ID phải là số nguyên >0!", 400));
 
         if (data == null)
-            return NotFound(new BaseResponse<string>("Không tìm thấy tiện nghi", 404));
+            return NotFound(new BaseResponse<string>("Không tìm thấy tiện nghi!", 404));
 
         var result = _mapper.Map<AmenityDto>(data);
         return Ok(new BaseResponse<AmenityDto>(result));
@@ -72,13 +77,13 @@ public class AmenityController : ControllerBase
     public async Task<IActionResult> Create([FromBody] AmenityCreateDto dto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(new BaseResponse<string>("Dữ liệu không hợp lệ", 400));
+            return BadRequest(new BaseResponse<string>("Dữ liệu không hợp lệ!", 400));
 
         try
         {
             var amenity = _mapper.Map<Amenities>(dto);
             var created = await _repository.CreateAsync(amenity);
-            return StatusCode(201, new BaseResponse<string>("Tạo tiện nghi thành công"));
+            return StatusCode(201, new BaseResponse<string>("Tạo tiện nghi thành công!"));
         }
         catch (BadRequestException ex)
         {
@@ -97,9 +102,9 @@ public class AmenityController : ControllerBase
             if (id <= 0)
                 return BadRequest(new BaseResponse<string>("ID phải là số nguyên >0!", 400));
             if (!success)
-                return NotFound(new BaseResponse<string>("Không tìm thấy tiện nghi", 404));
+                return NotFound(new BaseResponse<string>("Không tìm thấy tiện nghi!", 404));
 
-            return Ok(new BaseResponse<string>("Cập nhật thành công"));
+            return Ok(new BaseResponse<string>("Cập nhật thành công!"));
         }
         catch (BadRequestException ex)
         {
@@ -117,7 +122,7 @@ public class AmenityController : ControllerBase
             if (id <= 0)
                 return BadRequest(new BaseResponse<string>("ID phải là số nguyên >0!", 400));
             if (!success)
-                return NotFound(new BaseResponse<string>("Không tìm thấy tiện nghi", 404));
+                return NotFound(new BaseResponse<string>("Không tìm thấy tiện nghi!", 404));
 
             return Ok(new BaseResponse<string>("Xóa thành công"));
         }

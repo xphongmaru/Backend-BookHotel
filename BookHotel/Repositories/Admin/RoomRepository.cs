@@ -123,9 +123,6 @@ namespace BookHotel.Repositories.Admin
             return await query.ToListAsync();
         }
 
-
-
-
         //Thêm phòng
         public async Task<Room> CreateRoomAsync(Room room)
         {
@@ -134,6 +131,7 @@ namespace BookHotel.Repositories.Admin
             return room;
         }
 
+        //Sửa phòng
         public async Task<(bool Success, string Message)> UpdateRoomAsync(int roomId, UpdateRoomDto dto)
         {
             var room = await _context.Rooms
