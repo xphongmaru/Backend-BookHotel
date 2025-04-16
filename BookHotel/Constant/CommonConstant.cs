@@ -13,5 +13,10 @@
         public const string REJECTED = "Rejected";
 
         public const string APPROVED = "Approved";
+
+        public const string CHECKED_IN = "Checked_in";
+
+        public const string RATED = "Rated";
+
     }
 }

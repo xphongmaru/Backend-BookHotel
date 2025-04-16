@@ -6,6 +6,7 @@ using BookHotel.Models;
 using System.Reflection.Metadata.Ecma335;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using BookHotel.Constant;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -115,7 +116,7 @@ namespace BookHotel.Controllers
             {
                 return BadRequest(new ApiResponse(false, null, new ErrorResponse("Bạn chưa đặt phòng này!", 400)));
             }
-            var isStatusBooking = await _context.Bookings.FirstOrDefaultAsync(b => b.Booking_id == isRoomBooking.Booking_id && b.Status == "Hoàn thành");
+            var isStatusBooking = await _context.Bookings.FirstOrDefaultAsync(b => b.Booking_id == isRoomBooking.Booking_id && b.Status == Constant.BookingConstant.APPROVED);
             if(isStatusBooking != null)
             {
                 var review = new Review
@@ -132,7 +133,7 @@ namespace BookHotel.Controllers
                 if (result > 0)
                 {
                     // Cập nhật lại trạng thái của phòng
-                    isStatusBooking.Status = "Đã đánh giá";
+                    isStatusBooking.Status = Constant.BookingConstant.RATED;
                     _context.Bookings.Update(isStatusBooking);
                     await _context.SaveChangesAsync();
                     return Ok(new ApiResponse(true, "Thêm đánh giá thành công!", null));
