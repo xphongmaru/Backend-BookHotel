@@ -12,18 +12,18 @@ public class CreateRoomDto
     [Range(1, int.MaxValue)]
     public int Max_occupancy { get; set; }
 
-    public string Description { get; set; }
+    public string Description { get; set; } 
 
     [Required]
     public string Status { get; set; }
 
     [Required]
-    public IFormFile Thumbnail { get; set; } // 1 ảnh đại diện
+    public IFormFile Thumbnail { get; set; }
 
-    public List<IFormFile> RoomPhotos { get; set; } // nhiều ảnh mô tả
+    public List<IFormFile> RoomPhotos { get; set; } = new();
 
     [Required]
     public int TypeRoom_id { get; set; }
 
-    public List<int> AmenityIds { get; set; }
+    public List<int> AmenityIds { get; set; } = new();
 }

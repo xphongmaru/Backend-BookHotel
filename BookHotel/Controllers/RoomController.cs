@@ -115,6 +115,7 @@ public class RoomController : ControllerBase
             Thumbnail = r.Thumbnail,
             RoomPhotos = r.RoomPhotos.Select(p => p.Image_url).ToList(),
             Status = r.Status,
+            Max_occupancy = r.Max_occupancy,
             TypeRoom = r.TypeRoom == null ? null : new TypeRoomDto
             {
                 TypeRoom_id = r.TypeRoom.TypeRoom_id,
@@ -167,7 +168,8 @@ public class RoomController : ControllerBase
             Price = r.Room.Price,
             Thumbnail = r.Room.Thumbnail,
             RoomPhotos = r.Room.RoomPhotos.Select(p => p.Image_url).ToList(),
-            Status = r.Room.Status, 
+            Status = r.Room.Status,
+            Max_occupancy = r.Room.Max_occupancy,
             TypeRoom = r.Room.TypeRoom == null ? null : new TypeRoomDto
             {
                 TypeRoom_id = r.Room.TypeRoom.TypeRoom_id,
@@ -265,6 +267,7 @@ public class RoomController : ControllerBase
             Thumbnail = r.Thumbnail,
             RoomPhotos = r.RoomPhotos.Select(p => p.Image_url).ToList(),
             Status = r.Status,
+            Max_occupancy = r.Max_occupancy,
             TypeRoom = r.TypeRoom == null ? null : new TypeRoomDto
             {
                 TypeRoom_id = r.TypeRoom.TypeRoom_id,
@@ -403,6 +406,14 @@ public class RoomController : ControllerBase
             return NotFound(new BaseResponse<string>(message, 404));
 
         return Ok(new BaseResponse<string>(message, 200));
+    }
+
+    [Authorize(Roles = "admin")]
+    [HttpGet("admin/room-statuses")]
+    public IActionResult GetRoomStatuses()
+    {
+        var statuses = RoomStatus.GetAll();
+        return Ok(new BaseResponse<List<string>>(statuses));
     }
 
 }
