@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using System.Reflection.Metadata;
 using System.Security.Claims;
+using Azure.Core;
 
 namespace BookHotel.Controllers
 {
@@ -19,249 +20,157 @@ namespace BookHotel.Controllers
     {
         private readonly IBookingRepository _bookingRepository;
         public readonly AppDbContext _context;
+         
+         public BookingController(AppDbContext context)
+         {
+             _context = context;
+         }
 
-        public BookingController(AppDbContext context, IBookingRepository bookingRepository)
+        public BookingController(AppDbContext context)
         {
-            _bookingRepository = bookingRepository;
             _context = context;
         }
 
+
         [Authorize]
-        [HttpGet("admin")]
-        public async Task<ActionResult> geAlltBooking()
+        [HttpPost("checkout")]
+        public async Task<ActionResult> CheckoutBooking([FromBody] CheckoutCreateRequest request)
         {
+            //xác thực người dùng
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
             var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
             if (guess == null)
                 return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
-            if (guess.Role != 0)
-                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Bạn không có quyền truy cập!", 400)));
 
-            var bookingList = await _bookingRepository.GetBooking();
-            return Ok(new ApiResponse(true,bookingList,null));
+            //kiểm tra thông tin đặt phòng
+            var rooms = request.Rooms;
+            //check trạng thái phòng
+            decimal total = 0;
+            foreach (var room in rooms)
+            {
+                var roomCheck = _context.Rooms.FirstOrDefault(r => r.Room_id == room.Room_id);
+                if (roomCheck == null)
+                    return BadRequest(new ApiResponse(false, null, new ErrorResponse("Phòng không tồn tại", 400)));
+                if (roomCheck.Status == Constant.RoomStatus.Unavailable)
+                    return BadRequest(new ApiResponse(false, null, new ErrorResponse("Phòng đã được đặt", 400)));
+                //tính tiền
+                total += roomCheck.Price;
+
+            }
+
+            //tính số ngày đặt
+            var checkInDate = DateTime.Parse(request.Check_in);
+            var checkOutDate = DateTime.Parse(request.Check_out);
+            var totalDays = (checkOutDate - checkInDate).TotalDays;
+            if (totalDays <= 0)
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Ngày đặt không hợp lệ", 400)));
+
+            total = total * (decimal)totalDays;
+            decimal discount_value = 0;
+            //check discount
+            if (request.Discount != string.Empty)
+            {
+                var discount = _context.Discounts.FirstOrDefault(d => d.Code == request.Discount);
+                if (discount == null)
+                    return BadRequest(new ApiResponse(false, null, new ErrorResponse("Mã giảm giá không tồn tại", 400)));
+                //check thời gian
+                if (discount.Start_date > DateTime.Now || discount.End_date < DateTime.Now)
+                    return BadRequest(new ApiResponse(false, null, new ErrorResponse("Mã giảm giá không hợp lệ", 400)));
+
+                //check số tiền
+                if (discount.Status == false)
+                    return BadRequest(new ApiResponse(false, null, new ErrorResponse("Mã giảm giá không hợp lệ", 400)));
+
+                if (total < (decimal)discount.Price_applies)
+                    return BadRequest(new ApiResponse(false, null, new ErrorResponse("Mã giảm giá không hợp lệ", 400)));
+
+                ////check số lượng
+                if (discount.Quantity <= 0)
+                    return BadRequest(new ApiResponse(false, null, new ErrorResponse("Mã giảm giá đã hết lượt sử dụng.", 400)));
+
+                //check người dùng
+                var bookingDiscount = await _context.Bookings.FirstOrDefaultAsync(b => b.Guess_id == guess.Guess_id && b.DiscountCode == request.Discount);
+                if (bookingDiscount != null)
+                    return BadRequest(new ApiResponse(false, null, new ErrorResponse("Mã giảm giá đã được sử dụng.", 400)));
+
+                discount_value = (decimal)discount.Discount_percentage * total;
+
+                if (discount_value > (decimal)discount.Max_discount)
+                {
+                    discount_value = (decimal)discount.Max_discount;
+                }
+                //check số lượng
+                discount.Quantity -= 1;
+                _context.Discounts.Update(discount);
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok(new ApiResponse(true, new GetBookingRequest
+            {
+                Check_in = request.Check_in,
+                Check_out = request.Check_out,
+                Discount = request.Discount,
+                total = total,
+                totalDays = (int)totalDays,
+                discount_value = discount_value,
+                totalDiscount = total - discount_value,
+                Rooms = rooms,
+
+            }, null));
+
         }
 
         [Authorize]
-        [HttpPost("user")]
-        public async Task<ActionResult> addBooking ([FromBody] BookingRoomCreateRequest request)
+        [HttpPost("booking")]
+        public async Task<ActionResult> CreateBooking([FromBody] BookingRequest request)
         {
-            try
+            //xác thực người dùng
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+            var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
+            if (guess == null)
+                return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
+
+            //lưu thông tin đặt phòng
+            var booking = new Booking
             {
-                var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
-                var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
-                if (guess == null)
-                    return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
-
-
-                var booking = _context.Bookings.FirstOrDefault(b => b.Guess_id == guess.Guess_id && b.Status == Constant.BookingConstant.OPEN);
-
-                if (booking == null)
-                {
-                    booking = new Booking
-                    {
-                        Status = Constant.BookingConstant.OPEN,
-                        Guess_id =  guess.Guess_id,
-                        Check_in = DateTime.Parse(request.Check_in),
-                        Check_out = DateTime.Parse(request.Check_out),
-                    };
-                    _context.Bookings.Add(booking);
-                    await _context.SaveChangesAsync();
-                }
-
-                if (booking != null)
-                {
-                    booking.Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == booking.Booking_id).ToListAsync().Result;
-                    
-                    if (DateTime.Parse(request.Check_out) <= DateTime.Parse(request.Check_in)) {
-                        throw new Exception("check out phải >= ngày check in");
-                    }   
-
-                    if (booking.Check_in != DateTime.Parse(request.Check_in)) {
-                        throw new Exception("không được đổi check in");
-                    }
-
-                    if (booking.Check_out != DateTime.Parse(request.Check_out)) {
-                        throw new Exception("không được đổi check out");
-                    }
-
-                    if (request.Quantity > _context.Rooms.FirstOrDefault(d => d.Room_id == request.Room_id).Max_occupancy)
-                    {
-                        throw new Exception("so nguoi > suc chua cua phong");
-                    }
-                }
-
+                Check_in = DateTime.Parse(request.Check_in),
+                Check_out = DateTime.Parse(request.Check_out),
+                Request = request.Request,
+                Status = Constant.BookingConstant.PENDDING,
+                Total = request.Total,
+                Guess_id = guess.Guess_id, //lấy id của người dùng đang đăng nhập
+                //Discount = request.Discount,
+            };
+            _context.Bookings.Add(booking);
+            int result = await _context.SaveChangesAsync();
+            if (result <= 0)
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Đặt phòng không thành công", 400)));
+            //lưu phòng
+            foreach (var room in request.Rooms)
+            {
                 var bookingRoom = new Booking_Room
                 {
                     Booking_id = booking.Booking_id,
-                    Room_id = request.Room_id,
-                    Quantity = request.Quantity,
-                    Name_Guess = request.Name_Guess,
-                    Phone_Guess = request.Phone_Guess,
+                    Room_id = room.Room_id,
+                    Quantity = room.Quantity,
+                    Name_Guess = room.Name_Guess,
+                    Phone_Guess = room.Phone_Guess,
                 };
-
                 _context.Booking_Rooms.Add(bookingRoom);
-                await _context.SaveChangesAsync();
-
-                return Ok(new ApiResponse(true, "thêm phòng thành công", null));
             }
-            catch (Exception ex) {
-                var respone = new ApiResponse(false, null, new ErrorResponse(ex.Message, 500));
-                return BadRequest(respone);
-            }
+            result = await _context.SaveChangesAsync();
+            if (result <= 0)
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Đặt phòng không thành công", 400)));
+            else
+                return Ok(new ApiResponse(true, booking.Booking_id, null));
         }
 
-        [Authorize]
-        [HttpGet("user")]
-        public async  Task<ActionResult> getBooking()
-        {
-            try {
-                var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
-                var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
-                if (guess == null)
-                    return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
-
-                var booking = _context.Bookings.FirstOrDefault(b => b.Guess_id == guess.Guess_id && b.Status == Constant.BookingConstant.OPEN);
-
-                if (booking == null)
-                {
-                    throw new Exception("chưa đặt phòng");                
-                }
-                
-
-                booking.Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == booking.Booking_id).ToListAsync().Result;
-
-                var respone = new BookingRespone
-                {
-                    Booking_id = booking.Booking_id,
-                    Check_in = booking.Check_in.ToString("dd/MM/yyy"),
-                    Check_out = booking.Check_out.ToString("dd/MM/yyy"),
-                    Status = booking.Status,
-                    Description = booking.Description,
-                    Request = booking.Request,
-                    Guess_id = booking.Guess_id,
-                    Booking_Rooms = booking.Booking_Rooms,
-                    total = _bookingRepository.getTotal(booking.Booking_id) 
-                };
-
-                return Ok(new ApiResponse(true, respone, null));
-
-            }
-            catch(Exception ex)
-            {
-                var respone = new ApiResponse(false, null, new ErrorResponse(ex.Message, 500));
-                return BadRequest(respone);
-            }
-        }
 
         [Authorize]
-        [HttpPut("user")]
-        public async Task<ActionResult> processBooking([FromBody] DiscountRequest request)
+        [HttpPut("admin/update-status-booking")]
+        public async Task<ActionResult> updateStatus([FromBody] StatusUpdateRequest request)
         {
-            try
-            {
-                var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
-                var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
-                if (guess == null)
-                    return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
-
-
-                var booking = _context.Bookings.FirstOrDefault(b => b.Guess_id == guess.Guess_id && b.Status == Constant.BookingConstant.OPEN);
-                
-                if (booking == null)
-                {
-                    throw new Exception("booking khong ton tai");
-                }
- 
-               var discount = _context.Discounts.FirstOrDefault(ds => ds.Code == request.DiscountCode);
-
-                if (discount==null)
-                {
-                    throw new Exception("discount khong ton tai");                   
-                }
-
-                if (discount.End_date < DateTime.Now)
-                {
-                    throw new Exception("discount da het han");
-                }
-
-                decimal discount_value = (decimal) discount.Discount_percentage*request.total;
-                
-                if(discount_value>(decimal)discount.Max_discount)
-                {
-                    discount_value = (decimal)discount.Max_discount;
-                }    
-
-                booking.Status =Constant.BookingConstant.PENDDING;
-                _context.Entry(booking).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-
-                BookingRespone respone = new BookingRespone
-                {
-                    Booking_id = booking.Booking_id,
-                    Check_in = booking.Check_in.ToString("dd/MM/yyy"),
-                    Check_out = booking.Check_out.ToString("dd/MM/yyy"),
-                    Status = booking.Status,
-                    Description = booking.Description,
-                    Request = booking.Request,
-                    Guess_id = booking.Guess_id,
-                    Booking_Rooms = booking.Booking_Rooms,
-                    total = request.total-discount_value
-                };
-
-
-                return Ok(new ApiResponse(true,respone,null));
-            }
-            catch (Exception ex) {
-                var respone = new ApiResponse(false, null, new ErrorResponse(ex.Message, 500));
-                return BadRequest(respone);
-            }
-        }
-
-        [Authorize]
-        [HttpDelete("user")]
-        public async Task <ActionResult> deleteBookingItem(int room_id)
-        {
-            try
-            {
-                var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
-                var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
-                if (guess == null)
-                    return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
-
-                var booking = _context.Bookings.FirstOrDefault(b => b.Guess_id == guess.Guess_id && b.Status == Constant.BookingConstant.OPEN);
-
-                if (booking == null)
-                {
-                    throw new Exception("Khong ton tai booking");
-                }
-
-                if (booking.Guess_id != guess.Guess_id)
-                {
-                    throw new Exception("Khong duoc xoa");
-                }
-
-                var bookingRoom = _context.Booking_Rooms.FirstOrDefault(br => br.Booking_id == booking.Booking_id&&br.Room_id==room_id);
-
-                if (bookingRoom == null) {
-                    throw new Exception("Khong ton tai bookingRoom");
-                }
-                
-                _context.Booking_Rooms.Remove(bookingRoom);
-                 await _context.SaveChangesAsync();
-
-                return Ok(new ApiResponse(true,bookingRoom,null));
-            }
-            catch (Exception ex)
-            {
-                var respone = new ApiResponse(false, null, new ErrorResponse(ex.Message, 500));
-                return BadRequest(respone);
-            }
-        }
-
-        [Authorize]
-        [HttpPut("admin")]
-        public  async Task<ActionResult> updateBooking([FromBody] BookingRespone request)
-        {
+            //xác thực người dùng
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
             var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
             if (guess == null)
@@ -269,20 +178,365 @@ namespace BookHotel.Controllers
             if (guess.Role != 0)
                 return BadRequest(new ApiResponse(false, null, new ErrorResponse("Bạn không có quyền truy cập!", 400)));
 
+            //tìm booking
+            var booking = _context.Bookings.FirstOrDefault(b => b.Booking_id == request.Booking_id);
 
-            var booking = _context.Bookings.FirstOrDefault(b => b.Booking_id ==request.Booking_id );   
+            //check null
+            if (booking == null)
+            {
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Không tồn tại booking", 400)));
+            }
 
-            booking.Check_in = DateTime.Parse(request.Check_in);
-            booking.Check_out = DateTime.Parse(request.Check_out);
-            booking.Status=request.Status;
-            booking.Description=request.Description;
-            booking.Request=request.Request;
-
+            //update và lưu vào db
+            booking.Status = request.Status;
             _context.Entry(booking).State = EntityState.Modified;
             await _context.SaveChangesAsync();
             return Ok(new ApiResponse(true, booking, null));
         }
 
-    } 
+        [Authorize]
+        [HttpGet("get-booking")]
+        public async Task<ActionResult> getCart([FromBody] BookingID request)
+        {
+            //xác thực người dùng
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+            var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
+            if (guess == null)
+                return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
+
+            //tìm booking
+            var booking = _context.Bookings.FirstOrDefault(b => b.Booking_id == request.Booking_id);
+
+            //check null
+            if (booking == null)
+            {
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Không tồn tại booking", 400)));
+            }
+
+            if (booking.Guess_id != guess.Guess_id)
+            {
+                return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không có quyền truy câp", 401)));
+            }
+
+            //tim booking room
+            booking.Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == booking.Booking_id).ToListAsync().Result;
+
+            var respone = new BookingRespone
+            {
+                Booking_id = booking.Booking_id,
+                Check_in = booking.Check_in.ToString("dd/MM/yyyy"),
+                Check_out = booking.Check_out.ToString("dd/MM/yyyy"),
+                Status = booking.Status,
+                //Description = booking.Description,
+                Request = booking.Request,
+                //Guess_id = booking.Guess_id,
+                Booking_Rooms = booking.Booking_Rooms,
+                total = booking.Total,
+            };
+
+            return Ok(new ApiResponse(true, respone, null));
+        }
+
+        [Authorize]
+        [HttpGet("admin/get-all-booking")]
+        public async Task<ActionResult<List<getAllBookingRespone>>> geAlltBooking([FromBody] getAllBookingRequest request)
+        {
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+            var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
+            if (guess == null)
+                return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
+            if (guess.Role != 0)
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Bạn không có quyền truy cập!", 400)));
+
+            if (request.Guess_id != 0 && request.startdate != string.Empty && request.enddate != string.Empty)
+            {
+                var bookingList = await _context.Bookings
+                .Where(b => b.Guess_id == request.Guess_id && b.CreatedAt > DateTime.Parse(request.startdate) && b.CreatedAt < DateTime.Parse(request.enddate))
+                .Select(b =>
+                    new getAllBookingRespone
+                    {
+                        Booking_id = b.Booking_id,
+                        guess_name = _context.Guess.FirstOrDefault(g => g.Guess_id == b.Guess_id).Name,
+                        Status = b.Status,
+                        Request = b.Request,
+                        Check_in = b.Check_in.ToString("dd/MM/yyyy"),
+                        Check_out = b.Check_out.ToString("dd/MM/yyyy"),
+                        Total = b.Total
+                    }
+                ).ToListAsync();
+                return Ok(new ApiResponse(true, bookingList, null));
+
+            }
+            else if (request.Guess_id == 0 && request.startdate != string.Empty && request.enddate != string.Empty)
+            {
+                var bookingList = await _context.Bookings
+                .Where(b => b.CreatedAt > DateTime.Parse(request.startdate) && b.CreatedAt < DateTime.Parse(request.enddate))
+                .Select(b =>
+                    new getAllBookingRespone
+                    {
+                        Booking_id = b.Booking_id,
+                        guess_name = _context.Guess.FirstOrDefault(g => g.Guess_id == b.Guess_id).Name,
+                        Status = b.Status,
+                        Request = b.Request,
+                        Check_in = b.Check_in.ToString("dd/MM/yyyy"),
+                        Check_out = b.Check_out.ToString("dd/MM/yyyy"),
+                        Total = b.Total
+                    }
+                ).ToListAsync();
+                return Ok(new ApiResponse(true, bookingList, null));
+
+            }
+            else if (request.Guess_id != 0 && request.startdate == string.Empty && request.enddate == string.Empty)
+            {
+                var bookingList = await _context.Bookings
+               .Where(b => b.Guess_id == request.Guess_id)
+               .Select(b =>
+                   new getAllBookingRespone
+                   {
+                       Booking_id = b.Booking_id,
+                       guess_name = _context.Guess.FirstOrDefault(g => g.Guess_id == b.Guess_id).Name,
+                       Status = b.Status,
+                       Request = b.Request,
+                       Check_in = b.Check_in.ToString("dd/MM/yyyy"),
+                       Check_out = b.Check_out.ToString("dd/MM/yyyy"),
+                       Total = b.Total
+                   }
+               ).ToListAsync();
+                return Ok(new ApiResponse(true, bookingList, null));
+
+            }
+            else if (request.Guess_id == 0 && (request.startdate != string.Empty || request.enddate != string.Empty))
+            {
+                if (request.startdate != string.Empty)
+                {
+                    var bookingList = await _context.Bookings
+                   .Where(b => b.CreatedAt == DateTime.Parse(request.startdate))
+                   .Select(b =>
+                       new getAllBookingRespone
+                       {
+                           Booking_id = b.Booking_id,
+                           guess_name = _context.Guess.FirstOrDefault(g => g.Guess_id == b.Guess_id).Name,
+                           Status = b.Status,
+                           Request = b.Request,
+                           Check_in = b.Check_in.ToString("dd/MM/yyyy"),
+                           Check_out = b.Check_out.ToString("dd/MM/yyyy"),
+                           Total = b.Total
+                       }
+                   ).ToListAsync();
+                    return Ok(new ApiResponse(true, bookingList, null));
+                }
+                else
+                {
+                    var bookingList = await _context.Bookings
+                  .Where(b => b.CreatedAt == DateTime.Parse(request.enddate))
+                  .Select(b =>
+                      new getAllBookingRespone
+                      {
+                          Booking_id = b.Booking_id,
+                          guess_name = _context.Guess.FirstOrDefault(g => g.Guess_id == b.Guess_id).Name,
+                          Status = b.Status,
+                          Request = b.Request,
+                          Check_in = b.Check_in.ToString("dd/MM/yyyy"),
+                          Check_out = b.Check_out.ToString("dd/MM/yyyy"),
+                          Total = b.Total
+                      }
+                  ).ToListAsync();
+                    return Ok(new ApiResponse(true, bookingList, null));
+                }
+
+            }
+            else if (request.Guess_id != 0 && (request.startdate != string.Empty || request.enddate != string.Empty))
+            {
+                if (request.startdate != string.Empty)
+                {
+                    var bookingList = await _context.Bookings
+                   .Where(b => b.Guess_id == b.Guess_id && b.CreatedAt == DateTime.Parse(request.startdate))
+                   .Select(b =>
+                       new getAllBookingRespone
+                       {
+                           Booking_id = b.Booking_id,
+                           guess_name = _context.Guess.FirstOrDefault(g => g.Guess_id == b.Guess_id).Name,
+                           Status = b.Status,
+                           Request = b.Request,
+                           Check_in = b.Check_in.ToString("dd/MM/yyyy"),
+                           Check_out = b.Check_out.ToString("dd/MM/yyyy"),
+                           Total = b.Total
+                       }
+                   ).ToListAsync();
+                    return Ok(new ApiResponse(true, bookingList, null));
+                }
+                else
+                {
+                    var bookingList = await _context.Bookings
+                  .Where(b => b.Guess_id == request.Guess_id && b.CreatedAt == DateTime.Parse(request.enddate))
+                  .Select(b =>
+                      new getAllBookingRespone
+                      {
+                          Booking_id = b.Booking_id,
+                          guess_name = _context.Guess.FirstOrDefault(g => g.Guess_id == b.Guess_id).Name,
+                          Status = b.Status,
+                          Request = b.Request,
+                          Check_in = b.Check_in.ToString("dd/MM/yyyy"),
+                          Check_out = b.Check_out.ToString("dd/MM/yyyy"),
+                          Total = b.Total
+                      }
+                  ).ToListAsync();
+                    return Ok(new ApiResponse(true, bookingList, null));
+                }
+
+            }
+            else
+            {
+                var bookingList = await _context.Bookings
+                .Select(b =>
+                    new getAllBookingRespone
+                    {
+                        Booking_id = b.Booking_id,
+                        guess_name = _context.Guess.FirstOrDefault(g => g.Guess_id == b.Guess_id).Name,
+                        Status = b.Status,
+                        Request = b.Request,
+                        Check_in = b.Check_in.ToString("dd/MM/yyyy"),
+                        Check_out = b.Check_out.ToString("dd/MM/yyyy"),
+                        Total = b.Total
+                    }
+                ).ToListAsync();
+                return Ok(new ApiResponse(true, bookingList, null));
+            }
+        }
+
+        [Authorize]
+        [HttpPut("cancel-booking")]
+        public async Task<ActionResult> cancelbooking([FromBody] cancelBookingRequest request)
+        {
+            //xác thực người dùng
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+            var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
+            if (guess == null)
+                return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
+
+            //tìm booking
+            var booking = _context.Bookings.FirstOrDefault(b => b.Booking_id == request.Booking_id);
+
+            //check null
+            if (booking == null)
+            {
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Không tồn tại đặt phòng", 400)));
+            }
+
+            if (booking.Status != Constant.BookingConstant.PENDDING)
+            {
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Không thể hủy đặt phòng", 400)));
+            }
+
+            //update và lưu vào db
+            booking.Status = Constant.BookingConstant.CANCEL;
+            booking.Request = request.request;
+            _context.Entry(booking).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return Ok(new ApiResponse(true, "Hủy đặt phòng thành công ", null));
+        }
+
+        [Authorize]
+        [HttpGet("admin/get-all-status")]
+        public async Task<ActionResult> getAllStatus()
+        {
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+            var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
+            if (guess == null)
+                return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
+            if (guess.Role != 0)
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Bạn không có quyền truy cập!", 400)));
+
+            string[] StatusList = ["Pendding", "Closed","Cancel","Rejected","Approved"];
+            return Ok(new ApiResponse(true, StatusList, null));
+        }
+
+        [Authorize]
+        [HttpGet("user/get-all-booking")]
+        public async Task<ActionResult> getAllCurentBooking([FromBody] getAllBookingRequest request)
+        {
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+            var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
+            if (guess == null)
+                return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
+            if(request.startdate != string.Empty && request.enddate != string.Empty)
+            {
+                var bookingList = await _context.Bookings
+              .Where(b => b.Guess_id == guess.Guess_id&&b.CreatedAt>DateTime.Parse(request.startdate)&&b.CreatedAt<DateTime.Parse(request.enddate))
+              .Select(b =>
+                  new getAllBookingRespone
+                  {
+                      Booking_id = b.Booking_id,
+                      guess_name = guess.Name,
+                      Status = b.Status,
+                      Request = b.Request,
+                      Check_in = b.Check_in.ToString("dd/MM/yyyy"),
+                      Check_out = b.Check_out.ToString("dd/MM/yyyy"),
+                      Total = b.Total
+                  }
+              ).ToListAsync();
+
+               return Ok(new ApiResponse(true, bookingList, null));
+
+            }else if(request.startdate != string.Empty && request.enddate==string.Empty)
+            {
+                var bookingList = await _context.Bookings
+             .Where(b => b.Guess_id == guess.Guess_id && b.CreatedAt == DateTime.Parse(request.startdate))
+             .Select(b =>
+                 new getAllBookingRespone
+                 {
+                     Booking_id = b.Booking_id,
+                     guess_name = guess.Name,
+                     Status = b.Status,
+                     Request = b.Request,
+                     Check_in = b.Check_in.ToString("dd/MM/yyyy"),
+                     Check_out = b.Check_out.ToString("dd/MM/yyyy"),
+                     Total = b.Total
+                 }
+             ).ToListAsync();
+
+                return Ok(new ApiResponse(true, bookingList, null));
+            }
+            else if(request.startdate==string.Empty&& request.enddate != string.Empty)
+            {
+                var bookingList = await _context.Bookings
+             .Where(b => b.Guess_id == guess.Guess_id && b.CreatedAt == DateTime.Parse(request.enddate))
+             .Select(b =>
+                 new getAllBookingRespone
+                 {
+                     Booking_id = b.Booking_id,
+                     guess_name = guess.Name,
+                     Status = b.Status,
+                     Request = b.Request,
+                     Check_in = b.Check_in.ToString("dd/MM/yyyy"),
+                     Check_out = b.Check_out.ToString("dd/MM/yyyy"),
+                     Total = b.Total
+                 }
+             ).ToListAsync();
+
+                return Ok(new ApiResponse(true, bookingList, null));
+            }
+            else
+            {
+             var bookingList = await _context.Bookings
+            .Where(b => b.Guess_id == guess.Guess_id)
+            .Select(b =>
+                new getAllBookingRespone
+                {
+                    Booking_id = b.Booking_id,
+                    guess_name = guess.Name,
+                    Status = b.Status,
+                    Request = b.Request,
+                    Check_in = b.Check_in.ToString("dd/MM/yyyy"),
+                    Check_out = b.Check_out.ToString("dd/MM/yyyy"),
+                    Total = b.Total
+                }
+            ).ToListAsync();
+
+            return Ok(new ApiResponse(true, bookingList, null));
+            }
+
+        }
+    }
 } 
 

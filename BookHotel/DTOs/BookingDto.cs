@@ -10,7 +10,7 @@ namespace BookHotel.DTOs
     public class BookingRespone
     {
         public int Booking_id { get; set; }
-        public string Check_in { get; set; }=string.Empty;
+        public string Check_in { get; set; } = string.Empty;
         public string Check_out { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
@@ -23,7 +23,7 @@ namespace BookHotel.DTOs
     public class BookingRoomDeleteRequest
     {
         public int Booking_id { get; set; }
-        
+
         public int room_id { get; set; }
     }
 
@@ -35,8 +35,8 @@ namespace BookHotel.DTOs
 
     public class BookingRoomCreateRequest
     {
-        public string Check_in { get; set; }= string.Empty;
-        public string Check_out { get; set; }= string.Empty;
+        public string Check_in { get; set; } = string.Empty;
+        public string Check_out { get; set; } = string.Empty;
         public int Room_id { get; set; }
         public int Quantity { get; set; }
         public string Name_Guess { get; set; } = string.Empty;
@@ -79,5 +79,43 @@ namespace BookHotel.DTOs
         public string Discount { get; set; } = string.Empty;
         public decimal Total { get; set; }
         public List<Rooms> Rooms { get; set; } = new();
+    }
+
+    public class StatusUpdateRequest
+    {
+        public int Booking_id { get; set; }
+
+        public string Status { get; set; } = string.Empty;
+    }
+
+    public class BookingID
+    {
+        public int Booking_id { get; set; }
+    }
+
+    public class getAllBookingRespone()
+    {
+        public int Booking_id { get; set; }
+        public string Check_in { get; set; } = string.Empty;
+        public string Check_out { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string Request { get; set; } = string.Empty;
+        public decimal Total { get; set; }
+        public string guess_name { get; set; } = string.Empty;
+    }
+
+    public class cancelBookingRequest()
+    {
+        public int Booking_id { get; set; }
+        public string request { get; set; }=string.Empty;
+    }
+
+    public class getAllBookingRequest
+    {
+        public int Guess_id { get; set; }
+
+        public string startdate { get; set; } = string.Empty;
+
+        public string enddate { get; set; } = string.Empty;
     }
 }
