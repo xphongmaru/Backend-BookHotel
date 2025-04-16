@@ -19,6 +19,11 @@ namespace BookHotel.Controllers
     {
         private readonly IBookingRepository _bookingRepository;
         public readonly AppDbContext _context;
+         
+         public BookingController(AppDbContext context)
+         {
+             _context = context;
+         }
 
         [Authorize]
         [HttpPost("checkout")]
