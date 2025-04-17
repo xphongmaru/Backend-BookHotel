@@ -186,16 +186,17 @@ public class RoomController : ControllerBase
 
 
     [HttpGet("filter-rooms")]
-    public async Task<IActionResult> FilterRooms(
-        string? name = null,
-        int? maxOccupancy = null,
-        int? typeRoomId = null,
-        decimal? minPrice = null,
-        decimal? maxPrice = null,
-        string? status = null,
-        double? minRating = null,
-        [FromQuery] List<int>? amenityIds = null)
+    public async Task<IActionResult> FilterRooms([FromQuery] FilterRoomDto filterDto)
     {
+        var name = filterDto.Name;
+        var maxOccupancy = filterDto.MaxOccupancy;
+        var typeRoomId = filterDto.TypeRoomId;
+        var minPrice = filterDto.MinPrice;
+        var maxPrice = filterDto.MaxPrice;
+        var status = filterDto.Status;
+        var minRating = filterDto.MinRating;
+        var amenityIds = filterDto.AmenityIds;
+
         // Tên phòng kiểm tra ký tự đặc biệt
         if (!string.IsNullOrWhiteSpace(name))
         {
@@ -248,9 +249,8 @@ public class RoomController : ControllerBase
                 throw new BadRequestException($"Các tiện nghi không tồn tại: {string.Join(", ", invalidIds)}");
         }
 
-        // Lọc
-        var rooms = await _roomRepository.FilterRoomsAsync(
-            name, maxOccupancy, typeRoomId, minPrice, maxPrice, status, minRating, amenityIds, User);
+        // Lọc phòng
+        var rooms = await _roomRepository.FilterRoomsAsync(filterDto, User);
 
         if (!rooms.Any())
         {
@@ -259,6 +259,7 @@ public class RoomController : ControllerBase
             throw new NotFoundException("Không tìm thấy phòng phù hợp với điều kiện lọc.");
         }
 
+        // Map kết quả
         var roomDtos = rooms.Select(r => new RoomListDto
         {
             Room_id = r.Room_id,
@@ -287,7 +288,6 @@ public class RoomController : ControllerBase
 
         return Ok(new BaseResponse<List<RoomListDto>>(roomDtos));
     }
-
 
 
     [Authorize(Roles = "admin")]

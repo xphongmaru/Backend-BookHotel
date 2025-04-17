@@ -23,7 +23,7 @@ namespace BookHotel.Repositories.Admin
                 c.Type == ClaimTypes.Role && c.Value.Equals("admin", StringComparison.OrdinalIgnoreCase));
         }
 
-        // Lấy thông tin chi tiết phòng
+        //--------- Lấy thông tin chi tiết phòng
         public async Task<Room?> GetRoomDetailsAsync(int roomId, ClaimsPrincipal user)
         {
             var isAdmin = IsAdmin(user);
@@ -41,7 +41,7 @@ namespace BookHotel.Repositories.Admin
             return room;
         }
 
-        // Lấy danh sách phòng có phân trang
+        // -----------Lấy danh sách phòng có phân trang
         public async Task<(List<Room>, int)> GetRoomsAsync(int pageNumber, int pageSize, ClaimsPrincipal user)
         {
             var isAdmin = IsAdmin(user);
@@ -66,7 +66,7 @@ namespace BookHotel.Repositories.Admin
             return (rooms, totalRooms);
         }
 
-        // Lấy danh sách phòng bán chạy
+        // -------------Lấy danh sách phòng bán chạy
         public async Task<List<Room>> GetBestSellingRoomsAsync(ClaimsPrincipal user)
         {
             var isAdmin = IsAdmin(user);
@@ -84,11 +84,8 @@ namespace BookHotel.Repositories.Admin
             return await query.ToListAsync();
         }
 
-        // Lọc phòng
-        public async Task<List<Room>> FilterRoomsAsync(
-            string? name, int? maxOccupancy, int? typeRoomId,
-            decimal? minPrice, decimal? maxPrice, string? status,
-            double? minRating, List<int>? amenityIds, ClaimsPrincipal user)
+        // ---------------Lọc phòng
+        public async Task<List<Room>> FilterRoomsAsync(FilterRoomDto filterDto, ClaimsPrincipal user)
         {
             bool isAdmin = IsAdmin(user);
 
@@ -98,24 +95,37 @@ namespace BookHotel.Repositories.Admin
                 .Include(r => r.Booking_Rooms)
                 .Include(r => r.Reviews)
                 .Include(r => r.Room_Amenities)
-                    .ThenInclude(ra => ra.Amenities) // ✅ lấy thông tin tiện nghi
+                    .ThenInclude(ra => ra.Amenities)
                 .AsQueryable();
 
-            query = query
-                .Where(r =>
-                    (string.IsNullOrWhiteSpace(name) || r.Name.Contains(name)) &&
-                    (!maxOccupancy.HasValue || r.Max_occupancy >= maxOccupancy) &&
-                    (!typeRoomId.HasValue || r.TypeRoom_id == typeRoomId) &&
-                    (!minPrice.HasValue || r.Price >= minPrice) &&
-                    (!maxPrice.HasValue || r.Price <= maxPrice) &&
-                    (string.IsNullOrWhiteSpace(status) || r.Status.ToLower() == status.ToLower()) &&
-                    (!minRating.HasValue || (r.Reviews.Any() && r.Reviews.Average(rev => rev.Rating) >= minRating)) &&
-                    (isAdmin || r.Status != RoomStatus.Hidden)
-                );
+            if (!string.IsNullOrWhiteSpace(filterDto.Name))
+                query = query.Where(r => r.Name.Contains(filterDto.Name));
 
-            // Lọc theo danh sách tiện nghi
-            if (amenityIds != null && amenityIds.Any())
+            if (filterDto.MaxOccupancy.HasValue)
+                query = query.Where(r => r.Max_occupancy >= filterDto.MaxOccupancy.Value);
+
+            if (filterDto.TypeRoomId.HasValue)
+                query = query.Where(r => r.TypeRoom_id == filterDto.TypeRoomId.Value);
+
+            if (filterDto.MinPrice.HasValue)
+                query = query.Where(r => r.Price >= filterDto.MinPrice.Value);
+
+            if (filterDto.MaxPrice.HasValue)
+                query = query.Where(r => r.Price <= filterDto.MaxPrice.Value);
+
+            if (!string.IsNullOrWhiteSpace(filterDto.Status))
+                query = query.Where(r => r.Status.ToLower() == filterDto.Status.ToLower());
+
+            if (filterDto.MinRating.HasValue)
+                query = query.Where(r =>
+                    r.Reviews.Any() && r.Reviews.Average(rev => rev.Rating) >= filterDto.MinRating.Value);
+
+            if (!isAdmin)
+                query = query.Where(r => r.Status != RoomStatus.Hidden);
+
+            if (filterDto.AmenityIds != null && filterDto.AmenityIds.Any())
             {
+                var amenityIds = filterDto.AmenityIds;
                 query = query.Where(r =>
                     amenityIds.All(aid => r.Room_Amenities.Any(ra => ra.Amenities_id == aid)));
             }
@@ -123,7 +133,8 @@ namespace BookHotel.Repositories.Admin
             return await query.ToListAsync();
         }
 
-        //Thêm phòng
+
+        //--------------Thêm phòng
         public async Task<Room> CreateRoomAsync(Room room)
         {
             _context.Rooms.Add(room);
@@ -131,7 +142,7 @@ namespace BookHotel.Repositories.Admin
             return room;
         }
 
-        //Sửa phòng
+        //------------Sửa phòng
         public async Task<(bool Success, string Message)> UpdateRoomAsync(int roomId, UpdateRoomDto dto)
         {
             var room = await _context.Rooms
@@ -219,7 +230,7 @@ namespace BookHotel.Repositories.Admin
         }
 
 
-        // Xóa phòng
+        // ---------Xóa phòng
         public async Task DeleteRoomAsync(int roomId)
         {
             var room = await _context.Rooms
@@ -257,7 +268,7 @@ namespace BookHotel.Repositories.Admin
             await _context.SaveChangesAsync();
         }
 
-        // Ẩn phòng
+        // ---------Ẩn phòng
         public async Task<(bool Success, string Message)> HideRoomAsync(int roomId)
         {
             var room = await _context.Rooms.FindAsync(roomId);
@@ -270,7 +281,6 @@ namespace BookHotel.Repositories.Admin
             return (true, "Đã ẩn phòng thành công");
         }
 
-        // Xóa phòng
         private void DeleteFileIfExists(string? relativePath)
         {
             if (string.IsNullOrWhiteSpace(relativePath))
