@@ -54,6 +54,7 @@ namespace BookHotel.Controllers
                     CreatedAt = r.CreatedAt,
                 })
                 .ToListAsync();
+                
                 var response = new
                 {
                     currentPage = page,
