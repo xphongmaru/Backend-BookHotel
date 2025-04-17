@@ -15,7 +15,7 @@ namespace BookHotel.DTOs
         public float Max_discount { get; set; }
         public string Start_date { get; set; }=string.Empty;
         public string End_date { get; set; }= string.Empty;
-        public bool Status { get; set; }
+        public int Quantity { get; set; }
     }
 
     public class DiscountWithIdDto 
@@ -27,6 +27,8 @@ namespace BookHotel.DTOs
         public float Max_discount { get; set; }
         public string Start_date { get; set; }
         public string End_date { get; set; }
+        public bool Status { get; set; }
+        public int Quantity { get; set; }
     }
     
 }

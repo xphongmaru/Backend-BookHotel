@@ -97,7 +97,9 @@ namespace BookHotel.Controllers
                     Price_applies = request.Price_applies,
                     Max_discount = request.Max_discount,
                     Start_date = DateTime.Parse(request.Start_date),
-                    End_date = DateTime.Parse(request.End_date)
+                    End_date = DateTime.Parse(request.End_date),
+                    Quantity = request.Quantity,
+                    Status = true
                 };
 
                 _context.Discounts.Add(newDiscount);
@@ -144,6 +146,8 @@ namespace BookHotel.Controllers
                 discount.Max_discount = request.Max_discount;
                 discount.Start_date = DateTime.Parse(request.Start_date);
                 discount.End_date = DateTime.Parse(request.End_date);
+                discount.Quantity = request.Quantity;
+                discount.Status = request.Status;
 
                 _context.Entry(discount).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
