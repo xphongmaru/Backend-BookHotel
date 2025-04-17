@@ -18,6 +18,7 @@ namespace BookHotel.DTOs
     public class AuthGuessRespone
     {
         public string Token { get; set; } = string.Empty;
+        public string RefreshToken { get; set; } = string.Empty;
         public GetUser User { get; set; } = new GetUser();
     }
 
@@ -154,5 +155,10 @@ namespace BookHotel.DTOs
         public bool Gender { get; set; }
 
         public IFormFile? Thumbnail { get; set; } = null;
+    }
+
+    public class RefreshTokenRequest
+    {
+        public string RefreshToken { get; set; } = string.Empty;
     }
 }

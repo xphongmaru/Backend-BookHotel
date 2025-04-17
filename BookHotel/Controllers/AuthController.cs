@@ -11,7 +11,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
+using BookHotel.Services;
 
 
 namespace BookHotel.Controllers
@@ -23,12 +25,14 @@ namespace BookHotel.Controllers
         public readonly AppDbContext _context;
         public readonly IConfiguration _configuration;
         public readonly IEmailService _emailService;
+        private readonly Token _token;
 
         public AuthController(AppDbContext context, IConfiguration configuration, IEmailService emailService)
         {
             _context = context;
             _configuration = configuration;
             _emailService = emailService;
+            _token = new Token(configuration);
         }
 
         [HttpPost("login")]
@@ -59,13 +63,20 @@ namespace BookHotel.Controllers
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(30),
+                expires: DateTime.UtcNow.AddMinutes(180),
                 signingCredentials: new SigningCredentials(authSigninKey, SecurityAlgorithms.HmacSha256)
             );
+
+            var refreshToken = _token.GenerateRefreshToken();
+            var refreshTokenExpiryTime = _token.GetRefreshTokenExpiryTime();
+            guess.RefreshToken = refreshToken;
+            guess.RefreshTokenExpiryTime = refreshTokenExpiryTime;
+            await _context.SaveChangesAsync();
 
             var user = new AuthGuessRespone
             {
                 Token = new JwtSecurityTokenHandler().WriteToken(token),
+                RefreshToken = refreshToken,
                 User = new GetUser
                 {
                     Guess_id = guess.Guess_id,
@@ -194,6 +205,67 @@ namespace BookHotel.Controllers
                 return Ok(new ApiResponse(true, "Thay đổi mật khẩu mới thành công.", null));
             }
             
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<ActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+        {
+            var guess = await _context.Guess.FirstOrDefaultAsync(g => g.RefreshToken == request.RefreshToken && g.RefreshTokenExpiryTime >= DateTime.UtcNow);
+
+            if (guess == null)
+            {
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Refresh token không hợp lệ hoặc đã hết hạn.", 400)));
+            }
+
+            var role = "";
+            if (guess.Role == 0) role = "admin";
+            else role = "user";
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, guess.Name),
+                new Claim(ClaimTypes.Email, guess.Email),
+                new Claim(ClaimTypes.Role, role)
+            };
+
+            var authSigninKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(180),
+                signingCredentials: new SigningCredentials(authSigninKey, SecurityAlgorithms.HmacSha256)
+            );
+
+            var refreshToken = _token.GenerateRefreshToken();
+            var refreshTokenExpiryTime = _token.GetRefreshTokenExpiryTime();
+            guess.RefreshToken = refreshToken;
+            guess.RefreshTokenExpiryTime = refreshTokenExpiryTime;
+            await _context.SaveChangesAsync();
+
+            var user = new AuthGuessRespone
+            {
+                Token = new JwtSecurityTokenHandler().WriteToken(token),
+                RefreshToken = refreshToken,
+                User = new GetUser
+                {
+                    Guess_id = guess.Guess_id,
+                    Name = guess.Name,
+                    PhoneNumber = guess.PhoneNumber,
+                    Email = guess.Email,
+                    Address = guess.Address,
+                    CCCD = guess.CCCD,
+                    Gender = guess.Gender,
+                    Role = guess.Role,
+                    EmailVerify = guess.EmailVerify,
+                    Thumbnail = $"{Request.Scheme}://{Request.Host}/uploads/users/{guess.Thumbnail}",
+                    Bod = guess.Bod.ToString("dd-MM-yyyy", CultureInfo.InvariantCulture)
+                }
+            };
+
+
+            return Ok(new ApiResponse(true, user, null));
         }
     }
 }
