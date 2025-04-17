@@ -191,7 +191,7 @@ namespace BookHotel.Controllers
 
         [Authorize]
         [HttpGet("get-booking")]
-        public async Task<ActionResult> getCart([FromBody] BookingID request)
+        public async Task<ActionResult> getCart(int id)
         {
             //xác thực người dùng
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
@@ -200,7 +200,7 @@ namespace BookHotel.Controllers
                 return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
 
             //tìm booking
-            var booking = _context.Bookings.FirstOrDefault(b => b.Booking_id == request.Booking_id);
+            var booking = _context.Bookings.FirstOrDefault(b => b.Booking_id ==id);
 
             //check null
             if (booking == null)
@@ -234,7 +234,7 @@ namespace BookHotel.Controllers
 
         [Authorize]
         [HttpGet("admin/get-all-booking")]
-        public async Task<ActionResult<List<getAllBookingRespone>>> geAlltBooking([FromBody] getAllBookingRequest request)
+        public async Task<ActionResult<List<getAllBookingRespone>>> geAlltBooking(int Guess_id, string startdate, string enddate)
         {
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
             var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
@@ -243,10 +243,10 @@ namespace BookHotel.Controllers
             if (guess.Role != 0)
                 return BadRequest(new ApiResponse(false, null, new ErrorResponse("Bạn không có quyền truy cập!", 400)));
 
-            if (request.Guess_id != 0 && request.startdate != string.Empty && request.enddate != string.Empty)
+            if (Guess_id != 0 && startdate != string.Empty && enddate != string.Empty)
             {
                 var bookingList = await _context.Bookings
-                .Where(b => b.Guess_id == request.Guess_id && b.CreatedAt >= DateTime.Parse(request.startdate) && b.CreatedAt <= DateTime.Parse(request.enddate))
+                .Where(b => b.Guess_id == Guess_id && b.CreatedAt >= DateTime.Parse(startdate) && b.CreatedAt <= DateTime.Parse(enddate))
                 .Select(b =>
                     new getAllBookingRespone
                     {
@@ -262,10 +262,10 @@ namespace BookHotel.Controllers
                 return Ok(new ApiResponse(true, bookingList, null));
 
             }
-            else if (request.Guess_id == 0 && request.startdate != string.Empty && request.enddate != string.Empty)
+            else if (Guess_id == 0 && startdate != string.Empty && enddate != string.Empty)
             {
                 var bookingList = await _context.Bookings
-                .Where(b => b.CreatedAt >= DateTime.Parse(request.startdate) && b.CreatedAt <= DateTime.Parse(request.enddate))
+                .Where(b => b.CreatedAt >= DateTime.Parse(startdate) && b.CreatedAt <= DateTime.Parse(enddate))
                 .Select(b =>
                     new getAllBookingRespone
                     {
@@ -281,10 +281,10 @@ namespace BookHotel.Controllers
                 return Ok(new ApiResponse(true, bookingList, null));
 
             }
-            else if (request.Guess_id != 0 && request.startdate == string.Empty && request.enddate == string.Empty)
+            else if (Guess_id != 0 && startdate == string.Empty && enddate == string.Empty)
             {
                 var bookingList = await _context.Bookings
-               .Where(b => b.Guess_id == request.Guess_id)
+               .Where(b => b.Guess_id == Guess_id)
                .Select(b =>
                    new getAllBookingRespone
                    {
@@ -300,12 +300,12 @@ namespace BookHotel.Controllers
                 return Ok(new ApiResponse(true, bookingList, null));
 
             }
-            else if (request.Guess_id == 0 && (request.startdate != string.Empty || request.enddate != string.Empty))
+            else if (Guess_id == 0 && (startdate != string.Empty || enddate != string.Empty))
             {
-                if (request.startdate != string.Empty)
+                if (startdate != string.Empty)
                 {
                     var bookingList = await _context.Bookings
-                   .Where(b => b.CreatedAt.Date == DateTime.Parse(request.startdate).Date)
+                   .Where(b => b.CreatedAt.Date == DateTime.Parse(startdate).Date)
                    .Select(b =>
                        new getAllBookingRespone
                        {
@@ -323,7 +323,7 @@ namespace BookHotel.Controllers
                 else
                 {
                     var bookingList = await _context.Bookings
-                  .Where(b => b.CreatedAt.Date == DateTime.Parse(request.enddate).Date)
+                  .Where(b => b.CreatedAt.Date == DateTime.Parse(enddate).Date)
                   .Select(b =>
                       new getAllBookingRespone
                       {
@@ -340,12 +340,12 @@ namespace BookHotel.Controllers
                 }
 
             }
-            else if (request.Guess_id != 0 && (request.startdate != string.Empty || request.enddate != string.Empty))
+            else if (Guess_id != 0 && (startdate != string.Empty || enddate != string.Empty))
             {
-                if (request.startdate != string.Empty)
+                if (startdate != string.Empty)
                 {
                     var bookingList = await _context.Bookings
-                   .Where(b => b.Guess_id == b.Guess_id && b.CreatedAt.Date == DateTime.Parse(request.startdate).Date)
+                   .Where(b => b.Guess_id == b.Guess_id && b.CreatedAt.Date == DateTime.Parse(startdate).Date)
                    .Select(b =>
                        new getAllBookingRespone
                        {
@@ -363,7 +363,7 @@ namespace BookHotel.Controllers
                 else
                 {
                     var bookingList = await _context.Bookings
-                  .Where(b => b.Guess_id == request.Guess_id && b.CreatedAt.Date == DateTime.Parse(request.enddate).Date)
+                  .Where(b => b.Guess_id == Guess_id && b.CreatedAt.Date == DateTime.Parse(enddate).Date)
                   .Select(b =>
                       new getAllBookingRespone
                       {
@@ -448,16 +448,16 @@ namespace BookHotel.Controllers
 
         [Authorize]
         [HttpGet("user/get-all-booking")]
-        public async Task<ActionResult> getAllCurentBooking([FromBody] getAllBookingRequest request)
+        public async Task<ActionResult> getAllCurentBooking(string enddate,string startdate)
         {
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
             var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
             if (guess == null)
                 return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
-            if(request.startdate != string.Empty && request.enddate != string.Empty)
+            if(startdate != string.Empty && enddate != string.Empty)
             {
                 var bookingList = await _context.Bookings
-              .Where(b => b.Guess_id == guess.Guess_id&&b.CreatedAt>=DateTime.Parse(request.startdate)&&b.CreatedAt<=DateTime.Parse(request.enddate))
+              .Where(b => b.Guess_id == guess.Guess_id&&b.CreatedAt>=DateTime.Parse(startdate)&&b.CreatedAt<=DateTime.Parse(enddate))
               .Select(b =>
                   new getAllBookingRespone
                   {
@@ -473,10 +473,10 @@ namespace BookHotel.Controllers
 
                return Ok(new ApiResponse(true, bookingList, null));
 
-            }else if(request.startdate != string.Empty && request.enddate==string.Empty)
+            }else if(startdate != string.Empty && enddate==string.Empty)
             {
                 var bookingList = await _context.Bookings
-             .Where(b => b.Guess_id == guess.Guess_id && b.CreatedAt.Date == DateTime.Parse(request.startdate).Date)
+             .Where(b => b.Guess_id == guess.Guess_id && b.CreatedAt.Date == DateTime.Parse(startdate).Date)
              .Select(b =>
                  new getAllBookingRespone
                  {
@@ -492,10 +492,10 @@ namespace BookHotel.Controllers
 
                 return Ok(new ApiResponse(true, bookingList, null));
             }
-            else if(request.startdate==string.Empty&& request.enddate != string.Empty)
+            else if(startdate==string.Empty&& enddate != string.Empty)
             {
                 var bookingList = await _context.Bookings
-             .Where(b => b.Guess_id == guess.Guess_id && b.CreatedAt.Date == DateTime.Parse(request.enddate).Date)
+             .Where(b => b.Guess_id == guess.Guess_id && b.CreatedAt.Date == DateTime.Parse(enddate).Date)
              .Select(b =>
                  new getAllBookingRespone
                  {

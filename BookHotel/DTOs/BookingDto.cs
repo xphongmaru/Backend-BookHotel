@@ -12,7 +12,6 @@ namespace BookHotel.DTOs
         public int Booking_id { get; set; }
         public string Check_in { get; set; } = string.Empty;
         public string Check_out { get; set; } = string.Empty;
-       
         public string Status { get; set; } = string.Empty;
         public string Request { get; set; } = string.Empty;
         public decimal total { get; set; }
