@@ -36,6 +36,7 @@ namespace BookHotel.Controllers
         {
             var bookingRoomList =  _context.Booking_Rooms.Where(br => br.Booking_id == id);
             return Ok(new ApiResponse(true, bookingRoomList, null));
+
         }
 
 
@@ -46,4 +47,3 @@ namespace BookHotel.Controllers
 
    
 }
-
