@@ -17,12 +17,18 @@ namespace BookHotel.Repositories.Admin
             _context = context;
         }
 
-        public async Task<IEnumerable<TypeRoom>> GetAllAsync()
+        public async Task<List<TypeRoom>> GetAllAsync(int pageNumber, int pageSize)
         {
-            return await _context.TypeRooms.ToListAsync();
+            return await _context.TypeRooms
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
         }
 
-        
+        public async Task<int> CountAllAsync()
+        {
+            return await _context.TypeRooms.CountAsync();
+        }
 
 
         public async Task<TypeRoom> GetByIdAsync(int id)

@@ -28,17 +28,29 @@ public class RoomController : ControllerBase
         _context = context;
     }
 
+    private bool IsValidImage(IFormFile file)
+    {
+        var permittedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+        if (string.IsNullOrEmpty(extension) || !permittedExtensions.Contains(extension))
+            return false;
+
+        return true;
+    }
 
     [HttpGet("room-details")]
     public async Task<IActionResult> GetRoomDetails(int roomId)
     {
         var room = await _roomRepository.GetRoomDetailsAsync(roomId, User);
 
-        if (room == null)
-        {
-            return NotFound(new BaseResponse<string>("Không tìm thấy phòng!", 404));
-        }
+        if (roomId <= 0)
+            return BadRequest(new BaseResponse<string>("ID phải là số nguyên >0!", 400));
 
+        if (room == null)
+            return NotFound(new BaseResponse<string>("Không tìm thấy phòng!", 404));
+
+        var baseUrl = $"{Request.Scheme}://{Request.Host}";
         var rating = room.Reviews.Any() ? room.Reviews.Average(r => r.Rating) : 0;
 
         var roomDto = new RoomDto
@@ -48,10 +60,10 @@ public class RoomController : ControllerBase
             Price = room.Price,
             Max_occupancy = room.Max_occupancy,
             Description = room.Description,
-            Status = room.Status, 
-            Thumbnail = room.Thumbnail,
+            Status = room.Status,
+            Thumbnail = baseUrl + room.Thumbnail, // Ghép đầy đủ đường dẫn
             RoomPhotos = room.RoomPhotos
-                .Select(p => p.Image_url)
+                .Select(p => baseUrl + p.Image_url)
                 .ToList(),
             TypeRoom = new
             {
@@ -70,28 +82,28 @@ public class RoomController : ControllerBase
                     Description = a.Amenities.Description
                 })
                 .ToList(),
-                Reviews = room.Reviews
-                    .Select(r => new ReviewDto
-                    {
-                        Review_id = r.Review_id,
-                        Content = r.Comment,
-                        Rating = r.Rating,
-                        ReviewerName = r.Anonymous ? "Ẩn danh" : (r.Guess?.Name ?? "Ẩn danh"),
-                        ReviewerThumbnail = r.Anonymous ? "" : (r.Guess?.Thumbnail ?? ""),
-                        CreatedAt = r.CreatedAt.ToString("dd/MM/yyyy")
-                    })
-                    .ToList()
-
+            Reviews = room.Reviews
+                .Select(r => new ReviewDto
+                {
+                    Review_id = r.Review_id,
+                    Content = r.Comment,
+                    Rating = r.Rating,
+                    ReviewerName = r.Anonymous ? "Ẩn danh" : (r.Guess?.Name ?? "Ẩn danh"),
+                    ReviewerThumbnail = r.Anonymous ? "" :
+                        (!string.IsNullOrEmpty(r.Guess?.Thumbnail) ? baseUrl + r.Guess.Thumbnail : ""),
+                    CreatedAt = r.CreatedAt.ToString("dd/MM/yyyy")
+                })
+                .ToList()
         };
 
         return Ok(new BaseResponse<RoomDto>(roomDto));
     }
 
-
     [HttpGet("listRoom-pagination")]
     public async Task<IActionResult> GetRooms(int pageNumber = 1, int pageSize = 10)
     {
         (List<Room> rooms, int totalRooms) = await _roomRepository.GetRoomsAsync(pageNumber, pageSize, User);
+        var baseUrl = $"{Request.Scheme}://{Request.Host}";
 
         var roomIds = rooms.Select(r => r.Room_id).ToList();
 
@@ -112,8 +124,8 @@ public class RoomController : ControllerBase
             Room_id = r.Room_id,
             Name = r.Name,
             Price = r.Price,
-            Thumbnail = r.Thumbnail,
-            RoomPhotos = r.RoomPhotos.Select(p => p.Image_url).ToList(),
+            Thumbnail = baseUrl + r.Thumbnail,
+            RoomPhotos = r.RoomPhotos.Select(p => baseUrl + p.Image_url).ToList(),
             Status = r.Status,
             Max_occupancy = r.Max_occupancy,
             TypeRoom = r.TypeRoom == null ? null : new TypeRoomDto
@@ -143,11 +155,10 @@ public class RoomController : ControllerBase
     public async Task<IActionResult> GetBestSellingRooms(int topN = 5)
     {
         if (topN <= 0)
-        {
             throw new BadRequestException("Số lượng phòng topN phải lớn hơn 0.");
-        }
 
         var rooms = await _roomRepository.GetBestSellingRoomsAsync(User);
+        var baseUrl = $"{Request.Scheme}://{Request.Host}";
 
         var rankedRooms = rooms
             .Select(room => new
@@ -166,8 +177,8 @@ public class RoomController : ControllerBase
             Room_id = r.Room.Room_id,
             Name = r.Room.Name,
             Price = r.Room.Price,
-            Thumbnail = r.Room.Thumbnail,
-            RoomPhotos = r.Room.RoomPhotos.Select(p => p.Image_url).ToList(),
+            Thumbnail = baseUrl + r.Room.Thumbnail,
+            RoomPhotos = r.Room.RoomPhotos.Select(p => baseUrl + p.Image_url).ToList(),
             Status = r.Room.Status,
             Max_occupancy = r.Room.Max_occupancy,
             TypeRoom = r.Room.TypeRoom == null ? null : new TypeRoomDto
@@ -184,7 +195,6 @@ public class RoomController : ControllerBase
         return Ok(new BaseResponse<List<RoomListDto>>(roomDtos));
     }
 
-
     [HttpGet("filter-rooms")]
     public async Task<IActionResult> FilterRooms([FromQuery] FilterRoomDto filterDto)
     {
@@ -197,7 +207,7 @@ public class RoomController : ControllerBase
         var minRating = filterDto.MinRating;
         var amenityIds = filterDto.AmenityIds;
 
-        // Tên phòng kiểm tra ký tự đặc biệt
+        // Validate tên phòng
         if (!string.IsNullOrWhiteSpace(name))
         {
             if (name.Length > 100)
@@ -206,26 +216,26 @@ public class RoomController : ControllerBase
                 throw new BadRequestException("Tên phòng không được chứa ký tự đặc biệt.");
         }
 
-        // Sức chứa tối đa
+        // Validate sức chứa
         if (maxOccupancy.HasValue && maxOccupancy <= 0)
             throw new BadRequestException("Sức chứa tối đa phải lớn hơn 0.");
 
-        // Giá
+        // Validate giá
         if (minPrice < 0 || maxPrice < 0)
             throw new BadRequestException("Giá không được âm.");
         if (minPrice.HasValue && maxPrice.HasValue && minPrice > maxPrice)
             throw new BadRequestException("Giá tối thiểu không được lớn hơn giá tối đa.");
 
-        // Đánh giá
+        // Validate rating
         if (minRating < 0 || minRating > 5)
             throw new BadRequestException("Đánh giá trung bình phải từ 0 đến 5.");
 
-        // Trạng thái hợp lệ
+        // Validate status
         var allowedStatuses = new[] { RoomStatus.Available, RoomStatus.Unavailable, RoomStatus.Hidden };
         if (!string.IsNullOrWhiteSpace(status) && !allowedStatuses.Contains(status, StringComparer.OrdinalIgnoreCase))
             throw new BadRequestException($"Trạng thái không hợp lệ. Chỉ chấp nhận: {string.Join(", ", allowedStatuses)}");
 
-        // Kiểu phòng tồn tại
+        // Validate kiểu phòng
         if (typeRoomId.HasValue)
         {
             var exists = await _context.TypeRooms.AnyAsync(t => t.TypeRoom_id == typeRoomId.Value);
@@ -233,7 +243,7 @@ public class RoomController : ControllerBase
                 throw new BadRequestException("Kiểu phòng không tồn tại.");
         }
 
-        // Tiện nghi hợp lệ
+        // Validate tiện nghi
         if (amenityIds != null && amenityIds.Any())
         {
             if (amenityIds.Any(id => id <= 0))
@@ -259,14 +269,16 @@ public class RoomController : ControllerBase
             throw new NotFoundException("Không tìm thấy phòng phù hợp với điều kiện lọc.");
         }
 
-        // Map kết quả
+        var baseUrl = $"{Request.Scheme}://{Request.Host}";
+
+        // Map DTO
         var roomDtos = rooms.Select(r => new RoomListDto
         {
             Room_id = r.Room_id,
             Name = r.Name,
             Price = r.Price,
-            Thumbnail = r.Thumbnail,
-            RoomPhotos = r.RoomPhotos.Select(p => p.Image_url).ToList(),
+            Thumbnail = baseUrl + r.Thumbnail,
+            RoomPhotos = r.RoomPhotos.Select(p => baseUrl + p.Image_url).ToList(),
             Status = r.Status,
             Max_occupancy = r.Max_occupancy,
             TypeRoom = r.TypeRoom == null ? null : new TypeRoomDto
@@ -297,34 +309,32 @@ public class RoomController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(new BaseResponse<string>("Dữ liệu không hợp lệ", 400));
 
-        //Kiểm tra tên phòng trùng không
         var isDuplicate = await _context.Rooms
-        .AnyAsync(r => r.Name.ToLower() == dto.Name.ToLower());
+            .AnyAsync(r => r.Name.ToLower() == dto.Name.ToLower());
         if (isDuplicate)
             return BadRequest(new BaseResponse<string>("Tên phòng đã tồn tại", 400));
 
-        // Validate loại phòng
         var typeRoom = await _context.TypeRooms.FindAsync(dto.TypeRoom_id);
         if (typeRoom == null)
             return NotFound(new BaseResponse<string>("Không tìm thấy loại phòng", 404));
 
-        // Validate tiện nghi
         var amenities = await _context.Amenities
             .Where(a => dto.AmenityIds.Contains(a.Amenities_id))
             .ToListAsync();
-
         if (amenities.Count != dto.AmenityIds.Count)
             return BadRequest(new BaseResponse<string>("Một hoặc nhiều tiện nghi không hợp lệ", 400));
 
-        // Validate Status hợp lệ
         var validStatuses = new[] { RoomStatus.Available, RoomStatus.Hidden, RoomStatus.Unavailable };
         if (!validStatuses.Contains(dto.Status))
             return BadRequest(new BaseResponse<string>("Trạng thái phòng không hợp lệ", 400));
 
-        // Tạo thư mục lưu ảnh nếu chưa có
         var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/rooms");
         if (!Directory.Exists(uploadPath))
             Directory.CreateDirectory(uploadPath);
+
+        // Kiểm tra thumbnail
+        if (!IsValidImage(dto.Thumbnail))
+            return BadRequest(new BaseResponse<string>("Ảnh đại diện không hợp lệ (phải là ảnh JPG/PNG, <5MB)", 400));
 
         // Lưu ảnh thumbnail
         var thumbnailFileName = Guid.NewGuid() + Path.GetExtension(dto.Thumbnail.FileName);
@@ -333,32 +343,40 @@ public class RoomController : ControllerBase
         {
             await dto.Thumbnail.CopyToAsync(stream);
         }
+        var thumbnailRelativeUrl = "/uploads/rooms/" + thumbnailFileName;
 
-        // Lưu danh sách ảnh mô tả
+        // Lưu ảnh mô tả (chỉ lưu đường dẫn tương đối)
         var roomPhotos = new List<RoomPhoto>();
         if (dto.RoomPhotos != null)
         {
             foreach (var photo in dto.RoomPhotos)
             {
+                if (!IsValidImage(photo))
+                    return BadRequest(new BaseResponse<string>($"Ảnh mô tả không hợp lệ: {photo.FileName}", 400));
+
                 var fileName = Guid.NewGuid() + Path.GetExtension(photo.FileName);
                 var filePath = Path.Combine(uploadPath, fileName);
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await photo.CopyToAsync(stream);
                 }
-                roomPhotos.Add(new RoomPhoto { Image_url = "/uploads/rooms/" + fileName });
+                var relativeUrl = "/uploads/rooms/" + fileName;
+
+                roomPhotos.Add(new RoomPhoto
+                {
+                    Image_url = relativeUrl 
+                });
             }
         }
 
-        // Tạo entity phòng
         var room = new Room
         {
             Name = dto.Name,
             Price = dto.Price,
             Max_occupancy = dto.Max_occupancy,
             Description = dto.Description,
-            Status = dto.Status, 
-            Thumbnail = "/uploads/rooms/" + thumbnailFileName,
+            Status = dto.Status,
+            Thumbnail = thumbnailRelativeUrl,
             TypeRoom_id = dto.TypeRoom_id,
             RoomPhotos = roomPhotos,
             Room_Amenities = dto.AmenityIds
@@ -371,8 +389,6 @@ public class RoomController : ControllerBase
 
         return Ok(new BaseResponse<string>("Thêm phòng thành công"));
     }
-
-
 
     [Authorize(Roles = "admin")]
     [HttpPut("admin/update-room/{roomId}")]
@@ -393,7 +409,6 @@ public class RoomController : ControllerBase
         return Ok(new BaseResponse<string>("Cập nhật phòng thành công"));
     }
 
-
     [Authorize(Roles = "admin")]
     [HttpDelete("admin/{roomId}")]
     public async Task<IActionResult> DeleteRoom(int roomId)
@@ -401,7 +416,6 @@ public class RoomController : ControllerBase
         await _roomRepository.DeleteRoomAsync(roomId);
         return Ok(new BaseResponse<string>("Xóa phòng thành công"));
     }
-
 
     [Authorize(Roles = "admin")]
     [HttpPut("admin/{id}/hide")]
