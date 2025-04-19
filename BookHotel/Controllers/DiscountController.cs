@@ -190,7 +190,36 @@ namespace BookHotel.Controllers
 
         }
 
-           
-    }
-}
+        [HttpDelete("admin")]
+        public async Task<ActionResult> DeleteDiscount(int id)
+        {
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+            var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
+            if (guess == null)
+                return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
 
+            var discount= await _context.Discounts.FirstOrDefaultAsync(d=>d.Discount_id == id);
+
+            if(discount == null)
+            {
+                return NotFound(new ApiResponse(false, null, new ErrorResponse("Không tìm thấy đánh giá này!", 404)));
+            }
+
+            _context.Discounts.Remove(discount);
+
+
+            var result = await _context.SaveChangesAsync();
+            if (result > 0)
+            {
+                return Ok(new ApiResponse(true, "Xóa thành công!", null));
+            }
+            else
+            {
+                return BadRequest(new ApiResponse(false, null, new ErrorResponse("Xóa thất bại!", 400)));
+            }
+        }
+        }
+    }
+ 
+
+  
