@@ -32,7 +32,7 @@ namespace BookHotel.Controllers
         }
 
         [HttpGet("details")]
-        public  ActionResult GetBookingDetails([FromBody] int id)
+        public  ActionResult GetBookingDetails(int id)
         {
             var bookingRoomList =  _context.Booking_Rooms.Where(br => br.Booking_id == id);
             return Ok(new ApiResponse(true, bookingRoomList, null));
