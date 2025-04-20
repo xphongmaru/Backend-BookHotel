@@ -23,14 +23,22 @@ namespace BookHotel.Controllers
         }
 
         [HttpGet("get-all")]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] PagingRequestDto pagingDto)
         {
-            var data = await _repository.GetAllAsync();
-            var result = _mapper.Map<IEnumerable<TypeRoomDto>>(data);
-            return Ok(new BaseResponse<IEnumerable<TypeRoomDto>>(result));
-        }
+            var data = await _repository.GetAllAsync(pagingDto.PageNumber, pagingDto.PageSize);
+            var totalItems = await _repository.CountAllAsync();
 
-        
+            var result = _mapper.Map<IEnumerable<TypeRoomDto>>(data);
+
+            return Ok(new BaseResponse<object>(new
+            {
+                Items = result,
+                TotalItems = totalItems,
+                PageNumber = pagingDto.PageNumber,
+                PageSize = pagingDto.PageSize,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)pagingDto.PageSize)
+            }));
+        }
 
         [Authorize(Roles = "admin")]
         [HttpGet("admin/get-by-id/{id}")]

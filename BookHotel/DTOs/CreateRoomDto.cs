@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations;
 
 public class CreateRoomDto
 {
-    [Required]
     public string Name { get; set; }
 
     [Range(0, double.MaxValue)]
@@ -14,15 +13,12 @@ public class CreateRoomDto
 
     public string Description { get; set; } 
 
-    [Required]
     public string Status { get; set; }
 
-    [Required]
     public IFormFile Thumbnail { get; set; }
 
     public List<IFormFile> RoomPhotos { get; set; } = new();
 
-    [Required]
     public int TypeRoom_id { get; set; }
 
     public List<int> AmenityIds { get; set; } = new();

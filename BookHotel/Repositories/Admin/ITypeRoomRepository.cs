@@ -6,8 +6,8 @@ namespace BookHotel.Repositories.Admin
 {
     public interface ITypeRoomRepository
     {
-        Task<IEnumerable<TypeRoom>> GetAllAsync();
-        
+        Task<List<TypeRoom>> GetAllAsync(int pageNumber, int pageSize); 
+        Task<int> CountAllAsync(); 
         Task<TypeRoom> GetByIdAsync(int id);
         Task<TypeRoom> CreateAsync(TypeRoom typeRoom);
         Task<bool> UpdateAsync(int id, TypeRoom updatedTypeRoom);

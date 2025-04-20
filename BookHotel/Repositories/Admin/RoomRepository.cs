@@ -164,42 +164,49 @@ namespace BookHotel.Repositories.Admin
             if (!allAmenitiesExist)
                 return (false, "Một hoặc nhiều tiện nghi không tồn tại");
 
-            // Validate trạng thái nếu cần
             var validStatuses = new[] { RoomStatus.Available, RoomStatus.Hidden, RoomStatus.Unavailable };
             if (!validStatuses.Contains(dto.Status))
                 return (false, "Trạng thái phòng không hợp lệ");
 
-            // Cập nhật thông tin cơ bản
             room.Name = dto.Name;
             room.Price = dto.Price;
-            room.Status = dto.Status; // đã dùng constant bên ngoài
+            room.Status = dto.Status;
             room.Description = dto.Description;
             room.TypeRoom_id = dto.TypeRoom_id;
             room.Max_occupancy = dto.MaxPeople;
 
-            // Xử lý Thumbnail nếu có
+            var uploadPath = Path.Combine("wwwroot/uploads/rooms");
+            if (!Directory.Exists(uploadPath))
+                Directory.CreateDirectory(uploadPath);
+
+            // Xử lý thumbnail
             if (dto.Thumbnail != null)
             {
                 var thumbnailFileName = $"{Guid.NewGuid()}_{dto.Thumbnail.FileName}";
-                var thumbnailPath = Path.Combine("wwwroot/uploads", thumbnailFileName);
+                var thumbnailPath = Path.Combine(uploadPath, thumbnailFileName);
 
                 using (var stream = new FileStream(thumbnailPath, FileMode.Create))
                 {
                     await dto.Thumbnail.CopyToAsync(stream);
                 }
 
-                room.Thumbnail = $"/uploads/{thumbnailFileName}";
+                room.Thumbnail = $"/uploads/rooms/{thumbnailFileName}";
             }
 
-            // Xử lý RoomPhotos nếu có
+            // Xử lý RoomPhotos
             if (dto.RoomPhotos != null && dto.RoomPhotos.Any())
             {
+                // Xóa ảnh cũ trong DB và trong thư mục
+                foreach (var photo in room.RoomPhotos)
+                {
+                    DeleteFileIfExists(photo.Image_url);
+                }
                 _context.RoomPhotos.RemoveRange(room.RoomPhotos);
 
                 foreach (var photo in dto.RoomPhotos)
                 {
                     var photoFileName = $"{Guid.NewGuid()}_{photo.FileName}";
-                    var photoPath = Path.Combine("wwwroot/uploads", photoFileName);
+                    var photoPath = Path.Combine(uploadPath, photoFileName);
 
                     using (var stream = new FileStream(photoPath, FileMode.Create))
                     {
@@ -209,7 +216,7 @@ namespace BookHotel.Repositories.Admin
                     room.RoomPhotos.Add(new RoomPhoto
                     {
                         Room_id = roomId,
-                        Image_url = $"/uploads/{photoFileName}"
+                        Image_url = $"/uploads/rooms/{photoFileName}"
                     });
                 }
             }
