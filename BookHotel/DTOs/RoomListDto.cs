@@ -1,6 +1,4 @@
-﻿using BookHotel.Models;
-using System.ComponentModel.DataAnnotations;
-
+﻿
 namespace BookHotel.DTOs
 {
     public class RoomListDto

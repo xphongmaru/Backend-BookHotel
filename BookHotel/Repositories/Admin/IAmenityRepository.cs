@@ -1,6 +1,5 @@
 ﻿using BookHotel.DTOs;
 using BookHotel.Models;
-using System.Security.Claims;
 
 namespace BookHotel.Repositories.Admin
 {
