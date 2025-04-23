@@ -20,11 +20,11 @@ namespace BookHotel.Controllers
     {
         private readonly IBookingRepository _bookingRepository;
         public readonly AppDbContext _context;
-         
-         public BookingController(AppDbContext context)
-         {
-             _context = context;
-         }
+
+        public BookingController(AppDbContext context)
+        {
+            _context = context;
+        }
 
 
         [Authorize]
@@ -173,6 +173,10 @@ namespace BookHotel.Controllers
             if (guess.Role != 0)
                 return BadRequest(new ApiResponse(false, null, new ErrorResponse("Bạn không có quyền truy cập!", 400)));
 
+
+
+
+
             //tìm booking
             var booking = _context.Bookings.FirstOrDefault(b => b.Booking_id == request.Booking_id);
 
@@ -200,7 +204,7 @@ namespace BookHotel.Controllers
                 return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
 
             //tìm booking
-            var booking = _context.Bookings.FirstOrDefault(b => b.Booking_id ==id);
+            var booking = _context.Bookings.FirstOrDefault(b => b.Booking_id == id);
 
             //check null
             if (booking == null)
@@ -243,6 +247,25 @@ namespace BookHotel.Controllers
             if (guess.Role != 0)
                 return BadRequest(new ApiResponse(false, null, new ErrorResponse("Bạn không có quyền truy cập!", 400)));
 
+
+            try
+            {
+                DateTime.Parse(startdate);
+            }
+            catch (Exception ex)
+            {
+                startdate = string.Empty;
+            }
+
+            try
+            {
+                DateTime.Parse(enddate);
+            }
+            catch (Exception ex)
+            { enddate = string.Empty; }
+
+
+
             if (Guess_id != 0 && startdate != string.Empty && enddate != string.Empty)
             {
                 var bookingList = await _context.Bookings
@@ -251,12 +274,15 @@ namespace BookHotel.Controllers
                     new getAllBookingRespone
                     {
                         Booking_id = b.Booking_id,
-                        guess_name = _context.Guess.FirstOrDefault(g => g.Guess_id == b.Guess_id).Name,
+                        guess_name = guess.Name,
+                        guess_num = guess.PhoneNumber,
                         Status = b.Status,
                         Request = b.Request,
                         Check_in = b.Check_in.ToString("dd/MM/yyyy"),
                         Check_out = b.Check_out.ToString("dd/MM/yyyy"),
-                        Total = b.Total
+                        Total = b.Total,
+                        Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == b.Booking_id).ToList(),
+                        Quantity = b.Booking_Rooms.Sum(r => r.Quantity)
                     }
                 ).ToListAsync();
                 return Ok(new ApiResponse(true, bookingList, null));
@@ -270,12 +296,15 @@ namespace BookHotel.Controllers
                     new getAllBookingRespone
                     {
                         Booking_id = b.Booking_id,
-                        guess_name = _context.Guess.FirstOrDefault(g => g.Guess_id == b.Guess_id).Name,
+                        guess_name = guess.Name,
+                        guess_num = guess.PhoneNumber,
                         Status = b.Status,
                         Request = b.Request,
                         Check_in = b.Check_in.ToString("dd/MM/yyyy"),
                         Check_out = b.Check_out.ToString("dd/MM/yyyy"),
-                        Total = b.Total
+                        Total = b.Total,
+                        Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == b.Booking_id).ToList(),
+                        Quantity = b.Booking_Rooms.Sum(r => r.Quantity)
                     }
                 ).ToListAsync();
                 return Ok(new ApiResponse(true, bookingList, null));
@@ -289,12 +318,15 @@ namespace BookHotel.Controllers
                    new getAllBookingRespone
                    {
                        Booking_id = b.Booking_id,
-                       guess_name = _context.Guess.FirstOrDefault(g => g.Guess_id == b.Guess_id).Name,
+                       guess_name = guess.Name,
+                       guess_num = guess.PhoneNumber,
                        Status = b.Status,
                        Request = b.Request,
                        Check_in = b.Check_in.ToString("dd/MM/yyyy"),
                        Check_out = b.Check_out.ToString("dd/MM/yyyy"),
-                       Total = b.Total
+                       Total = b.Total,
+                       Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == b.Booking_id).ToList(),
+                       Quantity = b.Booking_Rooms.Sum(r => r.Quantity)
                    }
                ).ToListAsync();
                 return Ok(new ApiResponse(true, bookingList, null));
@@ -310,12 +342,15 @@ namespace BookHotel.Controllers
                        new getAllBookingRespone
                        {
                            Booking_id = b.Booking_id,
-                           guess_name = _context.Guess.FirstOrDefault(g => g.Guess_id == b.Guess_id).Name,
+                           guess_name = guess.Name,
+                           guess_num = guess.PhoneNumber,
                            Status = b.Status,
                            Request = b.Request,
                            Check_in = b.Check_in.ToString("dd/MM/yyyy"),
                            Check_out = b.Check_out.ToString("dd/MM/yyyy"),
-                           Total = b.Total
+                           Total = b.Total,
+                           Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == b.Booking_id).ToList(),
+                           Quantity = b.Booking_Rooms.Sum(r => r.Quantity)
                        }
                    ).ToListAsync();
                     return Ok(new ApiResponse(true, bookingList, null));
@@ -328,12 +363,15 @@ namespace BookHotel.Controllers
                       new getAllBookingRespone
                       {
                           Booking_id = b.Booking_id,
-                          guess_name = _context.Guess.FirstOrDefault(g => g.Guess_id == b.Guess_id).Name,
+                          guess_name = guess.Name,
+                          guess_num = guess.PhoneNumber,
                           Status = b.Status,
                           Request = b.Request,
                           Check_in = b.Check_in.ToString("dd/MM/yyyy"),
                           Check_out = b.Check_out.ToString("dd/MM/yyyy"),
-                          Total = b.Total
+                          Total = b.Total,
+                          Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == b.Booking_id).ToList(),
+                          Quantity = b.Booking_Rooms.Sum(r => r.Quantity)
                       }
                   ).ToListAsync();
                     return Ok(new ApiResponse(true, bookingList, null));
@@ -350,12 +388,15 @@ namespace BookHotel.Controllers
                        new getAllBookingRespone
                        {
                            Booking_id = b.Booking_id,
-                           guess_name = _context.Guess.FirstOrDefault(g => g.Guess_id == b.Guess_id).Name,
+                           guess_name = guess.Name,
+                           guess_num = guess.PhoneNumber,
                            Status = b.Status,
                            Request = b.Request,
                            Check_in = b.Check_in.ToString("dd/MM/yyyy"),
                            Check_out = b.Check_out.ToString("dd/MM/yyyy"),
-                           Total = b.Total
+                           Total = b.Total,
+                           Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == b.Booking_id).ToList(),
+                           Quantity = b.Booking_Rooms.Sum(r => r.Quantity)
                        }
                    ).ToListAsync();
                     return Ok(new ApiResponse(true, bookingList, null));
@@ -367,13 +408,17 @@ namespace BookHotel.Controllers
                   .Select(b =>
                       new getAllBookingRespone
                       {
+     
                           Booking_id = b.Booking_id,
-                          guess_name = _context.Guess.FirstOrDefault(g => g.Guess_id == b.Guess_id).Name,
+                          guess_name = guess.Name,
+                          guess_num = guess.PhoneNumber,
                           Status = b.Status,
                           Request = b.Request,
                           Check_in = b.Check_in.ToString("dd/MM/yyyy"),
                           Check_out = b.Check_out.ToString("dd/MM/yyyy"),
-                          Total = b.Total
+                          Total = b.Total,
+                          Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == b.Booking_id).ToList(),
+                          Quantity = b.Booking_Rooms.Sum(r => r.Quantity)
                       }
                   ).ToListAsync();
                     return Ok(new ApiResponse(true, bookingList, null));
@@ -387,12 +432,15 @@ namespace BookHotel.Controllers
                     new getAllBookingRespone
                     {
                         Booking_id = b.Booking_id,
-                        guess_name = _context.Guess.FirstOrDefault(g => g.Guess_id == b.Guess_id).Name,
+                        guess_name = guess.Name,
+                        guess_num = guess.PhoneNumber,
                         Status = b.Status,
                         Request = b.Request,
                         Check_in = b.Check_in.ToString("dd/MM/yyyy"),
                         Check_out = b.Check_out.ToString("dd/MM/yyyy"),
-                        Total = b.Total
+                        Total = b.Total,
+                        Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == b.Booking_id).ToList(),
+                        Quantity = b.Booking_Rooms.Sum(r => r.Quantity)
                     }
                 ).ToListAsync();
                 return Ok(new ApiResponse(true, bookingList, null));
@@ -442,38 +490,60 @@ namespace BookHotel.Controllers
             if (guess.Role != 0)
                 return BadRequest(new ApiResponse(false, null, new ErrorResponse("Bạn không có quyền truy cập!", 400)));
 
-            string[] StatusList = ["Pendding", "Closed","Cancel","Rejected","Approved"];
+            string[] StatusList = ["Pendding", "Closed", "Cancel", "Rejected", "Approved"];
             return Ok(new ApiResponse(true, StatusList, null));
         }
 
         [Authorize]
         [HttpGet("user/get-all-booking")]
-        public async Task<ActionResult> getAllCurentBooking(string enddate,string startdate)
+        public async Task<ActionResult> getAllCurentBooking(string enddate, string startdate)
         {
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
             var guess = await _context.Guess.FirstOrDefaultAsync(g => g.Email == userEmail);
             if (guess == null)
                 return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
-            if(startdate != string.Empty && enddate != string.Empty)
+            
+            try
+            {
+                DateTime.Parse(startdate);
+            }
+            catch (Exception ex)
+            {
+                startdate = string.Empty;
+            }
+
+            try
+            {
+                DateTime.Parse(enddate);
+            }
+            catch (Exception ex)
+            { enddate = string.Empty; }
+
+
+            if (startdate != string.Empty && enddate != string.Empty)
             {
                 var bookingList = await _context.Bookings
-              .Where(b => b.Guess_id == guess.Guess_id&&b.CreatedAt>=DateTime.Parse(startdate)&&b.CreatedAt<=DateTime.Parse(enddate))
+              .Where(b => b.Guess_id == guess.Guess_id && b.CreatedAt >= DateTime.Parse(startdate) && b.CreatedAt <= DateTime.Parse(enddate))
               .Select(b =>
                   new getAllBookingRespone
                   {
                       Booking_id = b.Booking_id,
                       guess_name = guess.Name,
+                      guess_num = guess.PhoneNumber,
                       Status = b.Status,
                       Request = b.Request,
                       Check_in = b.Check_in.ToString("dd/MM/yyyy"),
                       Check_out = b.Check_out.ToString("dd/MM/yyyy"),
-                      Total = b.Total
+                      Total = b.Total,
+                      Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == b.Booking_id).ToList(),
+                      Quantity=b.Booking_Rooms.Sum(r => r.Quantity)
                   }
               ).ToListAsync();
 
-               return Ok(new ApiResponse(true, bookingList, null));
+                return Ok(new ApiResponse(true, bookingList, null));
 
-            }else if(startdate != string.Empty && enddate==string.Empty)
+            }
+            else if (startdate != string.Empty && enddate == string.Empty)
             {
                 var bookingList = await _context.Bookings
              .Where(b => b.Guess_id == guess.Guess_id && b.CreatedAt.Date == DateTime.Parse(startdate).Date)
@@ -482,17 +552,20 @@ namespace BookHotel.Controllers
                  {
                      Booking_id = b.Booking_id,
                      guess_name = guess.Name,
+                     guess_num = guess.PhoneNumber,
                      Status = b.Status,
                      Request = b.Request,
                      Check_in = b.Check_in.ToString("dd/MM/yyyy"),
                      Check_out = b.Check_out.ToString("dd/MM/yyyy"),
-                     Total = b.Total
+                     Total = b.Total,
+                     Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == b.Booking_id).ToList(),
+                     Quantity = b.Booking_Rooms.Sum(r => r.Quantity)
                  }
              ).ToListAsync();
 
                 return Ok(new ApiResponse(true, bookingList, null));
             }
-            else if(startdate==string.Empty&& enddate != string.Empty)
+            else if (startdate == string.Empty && enddate != string.Empty)
             {
                 var bookingList = await _context.Bookings
              .Where(b => b.Guess_id == guess.Guess_id && b.CreatedAt.Date == DateTime.Parse(enddate).Date)
@@ -501,11 +574,14 @@ namespace BookHotel.Controllers
                  {
                      Booking_id = b.Booking_id,
                      guess_name = guess.Name,
+                     guess_num = guess.PhoneNumber,
                      Status = b.Status,
                      Request = b.Request,
                      Check_in = b.Check_in.ToString("dd/MM/yyyy"),
                      Check_out = b.Check_out.ToString("dd/MM/yyyy"),
-                     Total = b.Total
+                     Total = b.Total,
+                     Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == b.Booking_id).ToList(),
+                     Quantity = b.Booking_Rooms.Sum(r => r.Quantity)
                  }
              ).ToListAsync();
 
@@ -513,25 +589,29 @@ namespace BookHotel.Controllers
             }
             else
             {
-             var bookingList = await _context.Bookings
-            .Where(b => b.Guess_id == guess.Guess_id)
-            .Select(b =>
-                new getAllBookingRespone
-                {
-                    Booking_id = b.Booking_id,
-                    guess_name = guess.Name,
-                    Status = b.Status,
-                    Request = b.Request,
-                    Check_in = b.Check_in.ToString("dd/MM/yyyy"),
-                    Check_out = b.Check_out.ToString("dd/MM/yyyy"),
-                    Total = b.Total
-                }
-            ).ToListAsync();
+                var bookingList = await _context.Bookings
+               .Where(b => b.Guess_id == guess.Guess_id)
+               .Select(b =>
+                   new getAllBookingRespone
+                   {
+                       Booking_id = b.Booking_id,
+                       guess_name = guess.Name,
+                       guess_num = guess.PhoneNumber,
+                       Status = b.Status,
+                       Request = b.Request,
+                       Check_in = b.Check_in.ToString("dd/MM/yyyy"),
+                       Check_out = b.Check_out.ToString("dd/MM/yyyy"),
+                       Total = b.Total,
+                       Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == b.Booking_id).ToList(),
+                       Quantity = b.Booking_Rooms.Sum(r => r.Quantity)
+                   }
+               ).ToListAsync();
 
-            return Ok(new ApiResponse(true, bookingList, null));
+                return Ok(new ApiResponse(true, bookingList, null));
             }
 
         }
     }
-} 
+}
+
 
