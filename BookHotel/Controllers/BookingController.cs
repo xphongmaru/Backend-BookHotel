@@ -88,7 +88,7 @@ namespace BookHotel.Controllers
                 if (bookingDiscount != null)
                     return BadRequest(new ApiResponse(false, null, new ErrorResponse("Mã giảm giá đã được sử dụng.", 400)));
 
-                discount_value = (decimal)discount.Discount_percentage * total;
+                discount_value = (decimal)discount.Discount_percentage * total/100;
 
                 if (discount_value > (decimal)discount.Max_discount)
                 {
@@ -172,10 +172,6 @@ namespace BookHotel.Controllers
                 return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
             if (guess.Role != 0)
                 return BadRequest(new ApiResponse(false, null, new ErrorResponse("Bạn không có quyền truy cập!", 400)));
-
-
-
-
 
             //tìm booking
             var booking = _context.Bookings.FirstOrDefault(b => b.Booking_id == request.Booking_id);
@@ -274,6 +270,8 @@ namespace BookHotel.Controllers
                     new getAllBookingRespone
                     {
                         Booking_id = b.Booking_id,
+                        guess_id=guess.Guess_id,
+                        guess_ava=guess.Thumbnail,
                         guess_name = guess.Name,
                         guess_num = guess.PhoneNumber,
                         Status = b.Status,
@@ -296,6 +294,8 @@ namespace BookHotel.Controllers
                     new getAllBookingRespone
                     {
                         Booking_id = b.Booking_id,
+                        guess_id=guess.Guess_id,
+                        guess_ava=guess.Thumbnail,
                         guess_name = guess.Name,
                         guess_num = guess.PhoneNumber,
                         Status = b.Status,
@@ -318,6 +318,8 @@ namespace BookHotel.Controllers
                    new getAllBookingRespone
                    {
                        Booking_id = b.Booking_id,
+                       guess_id = guess.Guess_id,
+                       guess_ava = guess.Thumbnail,
                        guess_name = guess.Name,
                        guess_num = guess.PhoneNumber,
                        Status = b.Status,
@@ -342,6 +344,8 @@ namespace BookHotel.Controllers
                        new getAllBookingRespone
                        {
                            Booking_id = b.Booking_id,
+                           guess_id = guess.Guess_id,
+                           guess_ava = guess.Thumbnail,
                            guess_name = guess.Name,
                            guess_num = guess.PhoneNumber,
                            Status = b.Status,
@@ -363,6 +367,8 @@ namespace BookHotel.Controllers
                       new getAllBookingRespone
                       {
                           Booking_id = b.Booking_id,
+                          guess_id = guess.Guess_id,
+                          guess_ava = guess.Thumbnail,
                           guess_name = guess.Name,
                           guess_num = guess.PhoneNumber,
                           Status = b.Status,
@@ -388,6 +394,8 @@ namespace BookHotel.Controllers
                        new getAllBookingRespone
                        {
                            Booking_id = b.Booking_id,
+                           guess_id = guess.Guess_id,
+                           guess_ava = guess.Thumbnail,
                            guess_name = guess.Name,
                            guess_num = guess.PhoneNumber,
                            Status = b.Status,
@@ -408,8 +416,9 @@ namespace BookHotel.Controllers
                   .Select(b =>
                       new getAllBookingRespone
                       {
-     
                           Booking_id = b.Booking_id,
+                          guess_id = guess.Guess_id,
+                          guess_ava = guess.Thumbnail,
                           guess_name = guess.Name,
                           guess_num = guess.PhoneNumber,
                           Status = b.Status,
@@ -432,6 +441,8 @@ namespace BookHotel.Controllers
                     new getAllBookingRespone
                     {
                         Booking_id = b.Booking_id,
+                        guess_id = guess.Guess_id,
+                        guess_ava = guess.Thumbnail,
                         guess_name = guess.Name,
                         guess_num = guess.PhoneNumber,
                         Status = b.Status,
@@ -528,6 +539,8 @@ namespace BookHotel.Controllers
                   new getAllBookingRespone
                   {
                       Booking_id = b.Booking_id,
+                      guess_id = guess.Guess_id,
+                      guess_ava = guess.Thumbnail,
                       guess_name = guess.Name,
                       guess_num = guess.PhoneNumber,
                       Status = b.Status,
@@ -536,7 +549,7 @@ namespace BookHotel.Controllers
                       Check_out = b.Check_out.ToString("dd/MM/yyyy"),
                       Total = b.Total,
                       Booking_Rooms = _context.Booking_Rooms.Where(br => br.Booking_id == b.Booking_id).ToList(),
-                      Quantity=b.Booking_Rooms.Sum(r => r.Quantity)
+                      Quantity = b.Booking_Rooms.Sum(r => r.Quantity)
                   }
               ).ToListAsync();
 
@@ -551,6 +564,8 @@ namespace BookHotel.Controllers
                  new getAllBookingRespone
                  {
                      Booking_id = b.Booking_id,
+                     guess_id = guess.Guess_id,
+                     guess_ava = guess.Thumbnail,
                      guess_name = guess.Name,
                      guess_num = guess.PhoneNumber,
                      Status = b.Status,
@@ -573,6 +588,8 @@ namespace BookHotel.Controllers
                  new getAllBookingRespone
                  {
                      Booking_id = b.Booking_id,
+                     guess_id = guess.Guess_id,
+                     guess_ava = guess.Thumbnail,
                      guess_name = guess.Name,
                      guess_num = guess.PhoneNumber,
                      Status = b.Status,
@@ -595,6 +612,8 @@ namespace BookHotel.Controllers
                    new getAllBookingRespone
                    {
                        Booking_id = b.Booking_id,
+                       guess_id = guess.Guess_id,
+                       guess_ava = guess.Thumbnail,
                        guess_name = guess.Name,
                        guess_num = guess.PhoneNumber,
                        Status = b.Status,

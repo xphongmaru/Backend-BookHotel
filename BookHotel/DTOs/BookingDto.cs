@@ -101,6 +101,8 @@ namespace BookHotel.DTOs
         public string Status { get; set; } = string.Empty;
         public string Request { get; set; } = string.Empty;
         public decimal Total { get; set; }
+        public int guess_id { get; set; }
+        public string guess_ava {  get; set; } = string.Empty;
         public string guess_name { get; set; } = string.Empty;
         public string guess_num {  get; set; } = string.Empty;
         public List<Booking_Room> Booking_Rooms { get; set; } = new();
