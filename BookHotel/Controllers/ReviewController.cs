@@ -67,10 +67,12 @@ namespace BookHotel.Controllers
                 .Select(r => new GetAllReview
                 {
                     Review_id = r.Review_id,
+                    Room_id = r.Room_id,
                     Room_name = r.Room.Name,
                     Rating = r.Rating,
                     Comment = r.Comment,
                     Guess_name = r.Guess.Name,
+                    Guess_avatar = $"{Request.Scheme}://{Request.Host}/uploads/users/{r.Guess.Thumbnail}",
                     CreatedAt = r.CreatedAt,
                 })
                 .ToListAsync();
@@ -121,6 +123,7 @@ namespace BookHotel.Controllers
                     Rating = r.Rating,
                     Comment = r.Comment,
                     Guess_name = r.Anonymous ? "Ẩn danh" : r.Guess.Name,
+                    Guess_avatar = r.Anonymous ? $"{Request.Scheme}://{Request.Host}/uploads/users/default-user.png" : $"{Request.Scheme}://{Request.Host}/uploads/users/{r.Guess.Thumbnail}",
                     CreatedAt = r.CreatedAt,
                 })
                 .ToListAsync();

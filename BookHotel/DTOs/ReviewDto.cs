@@ -19,16 +19,19 @@ namespace BookHotel.DTOs
         public int Rating { get; set; }
         public string Comment { get; set; } = string.Empty;
         public string Guess_name { get; set; }
+        public string Guess_avatar { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 
     public class GetAllReview
     {
         public int Review_id { get; set; }
+        public int Room_id { get; set; }
         public string Room_name { get; set; }
         public int Rating { get; set; }
         public string Comment { get; set; } = string.Empty;
         public string Guess_name { get; set; }
+        public string Guess_avatar { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }
