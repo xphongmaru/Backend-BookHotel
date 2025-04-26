@@ -94,9 +94,7 @@ namespace BookHotel.Controllers
                 {
                     discount_value = (decimal)discount.Max_discount;
                 }
-                //check số lượng
-                discount.Quantity -= 1;
-                _context.Discounts.Update(discount);
+               
                 await _context.SaveChangesAsync();
             }
 
@@ -134,7 +132,7 @@ namespace BookHotel.Controllers
                 Status = Constant.BookingConstant.PENDDING,
                 Total = request.Total,
                 Guess_id = guess.Guess_id, //lấy id của người dùng đang đăng nhập
-                //Discount = request.Discount,
+                DiscountCode=request.Discount
             };
             _context.Bookings.Add(booking);
             int result = await _context.SaveChangesAsync();
@@ -175,7 +173,14 @@ namespace BookHotel.Controllers
 
             //tìm booking
             var booking = _context.Bookings.FirstOrDefault(b => b.Booking_id == request.Booking_id);
-
+            var discount = _context.Discounts.FirstOrDefault(d => d.Code == booking.DiscountCode);
+            if (discount != null)
+            {
+                //check số lượng
+                discount.Quantity -= 1;
+                _context.Discounts.Update(discount);
+                await _context.AddRangeAsync();
+            }
             //check null
             if (booking == null)
             {
