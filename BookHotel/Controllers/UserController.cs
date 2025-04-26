@@ -26,7 +26,7 @@ namespace BookHotel.Controllers
         // GET: api/<UserController>
         [Authorize]
         [HttpGet("api/admin/user")]
-        public async Task<ActionResult<IEnumerable<GetAllUserRequest>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<GetAllUserRequest>>> GetUsers(int page = 1, int pageSize = 10)
         {
             //xác thực người dùng
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
@@ -35,18 +35,24 @@ namespace BookHotel.Controllers
                 return Unauthorized(new ApiResponse(false, null, new ErrorResponse("Không xác thực được người dùng.", 401)));
             if (guess.Role != 0)
                 return BadRequest(new ApiResponse(false, null, new ErrorResponse("Bạn không có quyền truy cập!", 400)));
-            
-            //return await _context.Guess.ToListAsync();
-            return await _context.Guess.Select(g => new GetAllUserRequest
-            {
-                Guess_id = g.Guess_id,
-                Name = g.Name,
-                PhoneNumber = g.PhoneNumber,
-                Email = g.Email,
-                CCCD = g.CCCD,
-                Role = g.Role,
-                EmailVerify = g.EmailVerify
-            }).ToListAsync();
+
+            var totalCount = await _context.Guess.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+            var users = await _context.Guess
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(g => new GetAllUserRequest
+                {
+                    Guess_id = g.Guess_id,
+                    Name = g.Name,
+                    PhoneNumber = g.PhoneNumber,
+                    Email = g.Email,
+                    CCCD = g.CCCD,
+                    Role = g.Role,
+                    EmailVerify = g.EmailVerify
+                })
+                .ToListAsync();
+            return users;
         }
         
         //GET api/< UserController >/
