@@ -16,6 +16,8 @@
 
         public const string CHECKED_IN = "Checked_in";
 
+        public const string CHECKED_OUT = "Checked_out";
+
         public const string RATED = "Rated";
 
     }

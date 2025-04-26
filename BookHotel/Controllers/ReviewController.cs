@@ -159,7 +159,7 @@ namespace BookHotel.Controllers
             {
                 return BadRequest(new ApiResponse(false, null, new ErrorResponse("Bạn chưa đặt phòng này!", 400)));
             }
-            var isStatusBooking = await _context.Bookings.FirstOrDefaultAsync(b => b.Booking_id == isRoomBooking.Booking_id && b.Status == Constant.BookingConstant.APPROVED);
+            var isStatusBooking = await _context.Bookings.FirstOrDefaultAsync(b => b.Booking_id == isRoomBooking.Booking_id && b.Status == Constant.BookingConstant.CHECKED_OUT);
             if(isStatusBooking != null)
             {
                 var review = new Review
