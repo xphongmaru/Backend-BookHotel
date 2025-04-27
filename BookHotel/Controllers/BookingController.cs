@@ -158,7 +158,7 @@ namespace BookHotel.Controllers
                 return Ok(new ApiResponse(true, booking.Booking_id, null));
         }
 
-
+            
         [Authorize]
         [HttpPut("admin/update-status-booking")]
         public async Task<ActionResult> updateStatus([FromBody] StatusUpdateRequest request)
@@ -174,13 +174,15 @@ namespace BookHotel.Controllers
             //tìm booking
             var booking = _context.Bookings.FirstOrDefault(b => b.Booking_id == request.Booking_id);
             var discount = _context.Discounts.FirstOrDefault(d => d.Code == booking.DiscountCode);
-            if (discount != null)
+            
+            if (discount != null &&request.Status==Constant.BookingConstant.APPROVED&&booking.Status==Constant.BookingConstant.PENDDING)
             {
                 //check số lượng
                 discount.Quantity -= 1;
                 _context.Discounts.Update(discount);
                 await _context.AddRangeAsync();
             }
+
             //check null
             if (booking == null)
             {
