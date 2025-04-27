@@ -52,7 +52,15 @@ namespace BookHotel.Controllers
                     EmailVerify = g.EmailVerify
                 })
                 .ToListAsync();
-            return users;
+                var result = new
+                {
+                    page,
+                    pageSize,
+                    totalCount,
+                    totalPages,
+                    users
+                };
+                return Ok(new ApiResponse(true, result, null));
         }
         
         //GET api/< UserController >/
