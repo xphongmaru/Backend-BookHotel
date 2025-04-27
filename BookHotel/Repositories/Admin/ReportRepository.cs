@@ -20,8 +20,12 @@ namespace BookHotel.Repositories.Admin
             var query = _context.Booking_Rooms
                 .Include(br => br.Room)
                 .Include(br => br.Booking)
-                .Where(br => br.Booking.Status == BookingConstant.CLOSED &&
+                .Where(br => br.Booking.Status == BookingConstant.APPROVED || br.Booking.Status == BookingConstant.RATED ||
+                        br.Booking.Status == BookingConstant.CHECKED_IN
+                &&
                              br.Booking.CreatedAt.Year == year);
+                
+
 
             if (month.HasValue)
             {
@@ -55,7 +59,8 @@ namespace BookHotel.Repositories.Admin
                 {
                     RoomId = g.Key.Room_id,
                     RoomName = g.Key.Name,
-                    TotalRevenue = g.Sum(x => x.Price * x.Quantity)
+                    TotalRevenue = g.Sum(x => x.Price * x.Quantity),
+                    TotalBookings = g.Count()
                 })
                 .OrderByDescending(r => r.TotalRevenue)
                 .Take(topN)

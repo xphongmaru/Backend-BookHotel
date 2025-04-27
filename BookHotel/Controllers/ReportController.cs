@@ -21,7 +21,7 @@ public class ReportController : ControllerBase
     }
 
     //Báo cáo chọn ra Top N phòng có doanh thu cao nhất hiện tại
-    [Authorize(Roles = "admin")]
+    //[Authorize(Roles = "admin")]
     [HttpGet("admin/top-rooms-with-highest-revenue")]
     public async Task<IActionResult> GetTopRevenueRooms([FromQuery] int top = 5)
     {
@@ -64,7 +64,7 @@ public class ReportController : ControllerBase
     }
 
     //Báo cáo chọn ra top N phòng có doanh thu cao nhất theo năm, có thể thêm tháng, tuần của năm đó
-    [Authorize(Roles = "admin")]
+    //[Authorize(Roles = "admin")]
     [HttpGet("admin/top-rooms-revenue-year-month-week")]
     public async Task<IActionResult> GetTopRoomsRevenue([FromQuery] int year, [FromQuery] int? month, [FromQuery] int? week, [FromQuery] int topN = 5)
     {
