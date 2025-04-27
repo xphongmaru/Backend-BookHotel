@@ -88,7 +88,7 @@ namespace BookHotel.Controllers
                 if (bookingDiscount != null)
                     return BadRequest(new ApiResponse(false, null, new ErrorResponse("Mã giảm giá đã được sử dụng.", 400)));
 
-                discount_value = (decimal)discount.Discount_percentage * total/100;
+                discount_value = (decimal)discount.Discount_percentage * total;
 
                 if (discount_value > (decimal)discount.Max_discount)
                 {
